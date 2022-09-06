@@ -14,6 +14,15 @@
 
 ## 快速使用
 
+如果您的项目使用maven，可通过以下配置快速集成：
+```xml
+ <dependency>
+    <artifactId>fluent-sql-core</artifactId>
+    <groupId>group.flyfish.framework</groupId>
+    <version>1.0-SNAPSHOT</version>
+</dependency>
+```
+
 本小组件主要解决的是sql的书写问题，旨在用更加优雅的方式实现sql，并且不用再担心数据库方言（SQL Dialect）
 变化导致的频繁变更SQL问题。
 
