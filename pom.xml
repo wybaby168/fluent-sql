@@ -7,7 +7,7 @@
     <groupId>group.flyfish.framework</groupId>
     <artifactId>fluent-sql</artifactId>
     <packaging>pom</packaging>
-    <version>0.0.2</version>
+    <version>0.0.3</version>
 
     <name>fluent-sql</name>
     <description>A very fast sql generation engine using fluent-style api. Help you start your work without mybatis！</description>
@@ -31,6 +31,7 @@
         <module>fluent-sql-core</module>
         <module>fluent-sql-spring-jdbc</module>
         <module>fluent-sql-annotations</module>
+        <module>fluent-sql-spring-boot-starter</module>
     </modules>
 
     <properties>
@@ -38,6 +39,7 @@
         <maven.compiler.target>8</maven.compiler.target>
         <lombok.version>1.18.24</lombok.version>
         <jackson.version>2.13.3</jackson.version>
+        <spring-boot.version>2.7.2</spring-boot.version>
         <spring.version>5.3.22</spring.version>
     </properties>
 
@@ -86,6 +88,11 @@
             </dependency>
             <dependency>
                 <groupId>group.flyfish.framework</groupId>
+                <artifactId>fluent-sql-spring-jdbc</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>group.flyfish.framework</groupId>
                 <artifactId>fluent-sql-core</artifactId>
                 <version>${project.version}</version>
             </dependency>
@@ -93,6 +100,11 @@
                 <groupId>com.fasterxml.jackson.core</groupId>
                 <artifactId>jackson-databind</artifactId>
                 <version>${jackson.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-autoconfigure</artifactId>
+                <version>${spring-boot.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.springframework</groupId>

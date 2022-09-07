@@ -14,15 +14,27 @@
 
 ## 快速接入使用
 
-如果您的项目使用maven，并且使用spring-jdbc，可通过以下配置快速集成：
+### SpringBoot
+如果您的项目使用maven，并且使用spring-boot，可通过以下配置快速集成：
+```xml
+ <dependency>
+    <artifactId>fluent-sql-spring-boot-starter</artifactId>
+    <groupId>group.flyfish.framework</groupId>
+    <version>0.0.3</version>
+</dependency>
+```
+
+### Spring MVC
+没有使用spring boot也没关系，如果项目使用spring，请只依赖它：
 ```xml
  <dependency>
     <artifactId>fluent-sql-spring-jdbc</artifactId>
     <groupId>group.flyfish.framework</groupId>
-    <version>0.0.2</version>
+    <version>0.0.3</version>
 </dependency>
 ```
-您只需要注入您的数据源即可自动完成配置。
+
+然后，您只需要注入您的数据源即可自动完成配置。
 
 ```java
 import javax.sql.DataSource;

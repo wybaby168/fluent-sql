@@ -7,12 +7,24 @@
         <groupId>group.flyfish.framework</groupId>
         <version>0.0.3</version>
     </parent>
+    <description>spring boot 快速集成组件</description>
     <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>fluent-sql-annotations</artifactId>
+    <artifactId>fluent-sql-spring-boot-starter</artifactId>
 
     <properties>
         <maven.compiler.source>8</maven.compiler.source>
         <maven.compiler.target>8</maven.compiler.target>
     </properties>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-autoconfigure</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>group.flyfish.framework</groupId>
+            <artifactId>fluent-sql-spring-jdbc</artifactId>
+        </dependency>
+    </dependencies>
 </project>
