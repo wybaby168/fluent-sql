@@ -18,6 +18,10 @@
 
     <dependencies>
         <dependency>
+            <groupId>group.flyfish.framework</groupId>
+            <artifactId>fluent-sql-annotations</artifactId>
+        </dependency>
+        <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-databind</artifactId>
         </dependency>

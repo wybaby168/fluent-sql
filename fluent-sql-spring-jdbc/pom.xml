@@ -9,7 +9,7 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>fluent-sql-jdbctemplate</artifactId>
+    <artifactId>fluent-sql-spring-jdbc</artifactId>
 
     <properties>
         <maven.compiler.source>8</maven.compiler.source>

@@ -29,7 +29,8 @@
 
     <modules>
         <module>fluent-sql-core</module>
-        <module>fluent-sql-jdbctemplate</module>
+        <module>fluent-sql-spring-jdbc</module>
+        <module>fluent-sql-annotations</module>
     </modules>
 
     <properties>
@@ -78,6 +79,11 @@
 
     <dependencyManagement>
         <dependencies>
+            <dependency>
+                <groupId>group.flyfish.framework</groupId>
+                <artifactId>fluent-sql-annotations</artifactId>
+                <version>${project.version}</version>
+            </dependency>
             <dependency>
                 <groupId>group.flyfish.framework</groupId>
                 <artifactId>fluent-sql-core</artifactId>
