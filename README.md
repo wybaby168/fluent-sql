@@ -12,16 +12,42 @@
 6. 智能别名策略，写查询再也不用担心多张表的别名问题，代码简介易懂，用java跟sql体验直接拉满
 7. 高精度api控制，sql构建每个步骤严格把关，保证输入一个api立即能写出来接下来的步骤还不出错
 
-## 快速使用
+## 快速接入使用
 
-如果您的项目使用maven，可通过以下配置快速集成：
+如果您的项目使用maven，并且使用spring-jdbc，可通过以下配置快速集成：
 ```xml
  <dependency>
-    <artifactId>fluent-sql-core</artifactId>
+    <artifactId>fluent-sql-spring-jdbc</artifactId>
     <groupId>group.flyfish.framework</groupId>
-    <version>0.0.1</version>
+    <version>0.0.2</version>
 </dependency>
 ```
+您只需要注入您的数据源即可自动完成配置。
+
+```java
+import javax.sql.DataSource;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import group.flyfish.fluent.operations.FluentSQLOperations;
+import group.flyfish.fluent.operations.JdbcTemplateFluentSQLOperations;
+import org.springframework.jdbc.core.JdbcTemplate;
+
+@Configuration
+public class FluentSqlConfig {
+
+    /**
+     * 实际应用中，使用bean注入并实例化
+     *
+     * @param dataSource 从spring datasource注入
+     */
+    @Bean
+    public FluentSQLOperations fluentSQLOperations(DataSource dataSource) {
+        return new JdbcTemplateFluentSQLOperations(new JdbcTemplate(dataSource));
+    }
+}
+```
+
+## 对比直接书写SQL
 
 本小组件主要解决的是sql的书写问题，旨在用更加优雅的方式实现sql，并且不用再担心数据库方言（SQL Dialect）
 变化导致的频繁变更SQL问题。
