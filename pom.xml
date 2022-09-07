@@ -8,6 +8,25 @@
     <artifactId>fluent-sql</artifactId>
     <packaging>pom</packaging>
     <version>0.0.1</version>
+
+    <name>fluent-sql</name>
+    <description>A very fast sql generation engine using fluent-style api. Help you start your work without mybatis！</description>
+    <url>https://github.com/wybaby168/fluent-sql</url>
+
+    <!-- SCM信息 -> git在gitee上托管 -->
+    <scm>
+        <url>https://github.com/wybaby168/fluent-sql.git</url>
+    </scm>
+
+    <!-- 许可证信息 -->
+    <licenses>
+        <!-- Apache许可证 -->
+        <license>
+            <name>The Apache Software License, Version 2.0</name>
+            <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+        </license>
+    </licenses>
+
     <modules>
         <module>fluent-sql-core</module>
         <module>fluent-sql-jdbctemplate</module>
