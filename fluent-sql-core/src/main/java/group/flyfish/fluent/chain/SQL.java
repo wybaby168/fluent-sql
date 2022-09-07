@@ -2,9 +2,9 @@ package group.flyfish.fluent.chain;
 
 import group.flyfish.fluent.chain.common.PreSqlChain;
 import group.flyfish.fluent.chain.select.SelectComposite;
+import group.flyfish.fluent.operations.FluentSQLOperations;
 import group.flyfish.fluent.update.Update;
 import group.flyfish.fluent.utils.sql.SFunction;
-import org.springframework.jdbc.core.JdbcOperations;
 
 import static group.flyfish.fluent.utils.sql.SqlNameUtils.cast;
 
@@ -54,11 +54,11 @@ public interface SQL {
     }
 
     /**
-     * 绑定数据源上下文，基于jdbc template
+     * 绑定数据源上下文，可自由切换实现
      *
      * @param operations jdbc操作
      */
-    static void bind(JdbcOperations operations) {
+    static void bind(FluentSQLOperations operations) {
         SQLImpl.bind(operations);
     }
 }

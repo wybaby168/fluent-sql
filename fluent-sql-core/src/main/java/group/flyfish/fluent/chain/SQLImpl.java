@@ -6,7 +6,8 @@ import group.flyfish.fluent.chain.common.PreSqlChain;
 import group.flyfish.fluent.chain.select.AfterOrderSqlChain;
 import group.flyfish.fluent.chain.select.AfterWhereSqlChain;
 import group.flyfish.fluent.chain.update.AfterSetSqlChain;
-import group.flyfish.fluent.mapping.SQLMappedRowMapper;
+import group.flyfish.fluent.entity.SQLEntity;
+import group.flyfish.fluent.operations.FluentSQLOperations;
 import group.flyfish.fluent.query.JoinCandidate;
 import group.flyfish.fluent.query.Parameterized;
 import group.flyfish.fluent.query.Query;
@@ -18,8 +19,6 @@ import group.flyfish.fluent.utils.sql.ConcatSegment;
 import group.flyfish.fluent.utils.sql.EntityNameUtils;
 import group.flyfish.fluent.utils.sql.SFunction;
 import group.flyfish.fluent.utils.sql.SqlNameUtils;
-import org.springframework.dao.EmptyResultDataAccessException;
-import org.springframework.jdbc.core.JdbcOperations;
 import org.springframework.util.Assert;
 
 import java.util.ArrayList;
@@ -35,7 +34,7 @@ import java.util.stream.Collectors;
 final class SQLImpl extends ConcatSegment<SQLImpl> implements SQLOperations, PreSqlChain, HandleSqlChain, AfterJoinSqlChain, AfterSetSqlChain {
 
     // 共享的操作
-    private static JdbcOperations SHARED_OPERATIONS;
+    private static FluentSQLOperations SHARED_OPERATIONS;
     // 参数map，有序
     private final List<Object> parameters = new ArrayList<>();
 
@@ -43,11 +42,11 @@ final class SQLImpl extends ConcatSegment<SQLImpl> implements SQLOperations, Pre
     private final boolean debug = false;
 
     /**
-     * 基于jdbc template
+     * 绑定实现类
      *
      * @param operations jdbc操作
      */
-    public static void bind(JdbcOperations operations) {
+    public static void bind(FluentSQLOperations operations) {
         SHARED_OPERATIONS = operations;
     }
 
@@ -184,12 +183,7 @@ final class SQLImpl extends ConcatSegment<SQLImpl> implements SQLOperations, Pre
      * @param <T>   泛型
      */
     public <T> T one(Class<T> clazz) {
-        try {
-            return SHARED_OPERATIONS.queryForObject(sql().concat(" limit 1"),
-                    new SQLMappedRowMapper<>(clazz), parsedParameters());
-        } catch (EmptyResultDataAccessException e) {
-            return null;
-        }
+        return SHARED_OPERATIONS.selectOne(entity(), clazz);
     }
 
     /**
@@ -200,7 +194,7 @@ final class SQLImpl extends ConcatSegment<SQLImpl> implements SQLOperations, Pre
      */
     @Override
     public <T> List<T> list(Class<T> clazz) {
-        return SHARED_OPERATIONS.query(sql(), new SQLMappedRowMapper<>(clazz), parsedParameters());
+        return SHARED_OPERATIONS.select(entity(), clazz);
     }
 
     /**
@@ -210,7 +204,7 @@ final class SQLImpl extends ConcatSegment<SQLImpl> implements SQLOperations, Pre
      */
     @Override
     public int execute() {
-        return SHARED_OPERATIONS.update(sql(), parsedParameters());
+        return SHARED_OPERATIONS.execute(entity());
     }
 
     /**
@@ -251,5 +245,14 @@ final class SQLImpl extends ConcatSegment<SQLImpl> implements SQLOperations, Pre
         }
         parameters.addAll(params.getParameters());
         return false;
+    }
+
+    /**
+     * 将本实体转换为sql实体
+     *
+     * @return 转换结果
+     */
+    private SQLEntity entity() {
+        return SQLEntity.of(this::sql, this::parsedParameters);
     }
 }

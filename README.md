@@ -19,7 +19,7 @@
  <dependency>
     <artifactId>fluent-sql-core</artifactId>
     <groupId>group.flyfish.framework</groupId>
-    <version>1.0-SNAPSHOT</version>
+    <version>0.0.1</version>
 </dependency>
 ```
 
