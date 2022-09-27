@@ -7,7 +7,7 @@
     <groupId>group.flyfish.framework</groupId>
     <artifactId>fluent-sql</artifactId>
     <packaging>pom</packaging>
-    <version>0.0.4</version>
+    <version>0.0.5</version>
 
     <name>fluent-sql</name>
     <description>A very fast sql generation engine using fluent-style api. Help you start your work without mybatis！</description>
