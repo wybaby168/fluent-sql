@@ -60,6 +60,10 @@ public class JdbcTemplateFluentSQLOperations implements FluentSQLOperations {
      */
     @Override
     public <T> List<T> select(SQLEntity entity, Class<T> clazz) {
+        String sql = entity.getSql();
+        if (ClassUtils.isPrimitiveOrWrapper(clazz)) {
+            return jdbcOperations.queryForList(sql, clazz, entity.getParameters());
+        }
         return jdbcOperations.query(entity.getSql(), new SQLMappedRowMapper<>(clazz), entity.getParameters());
     }
 
