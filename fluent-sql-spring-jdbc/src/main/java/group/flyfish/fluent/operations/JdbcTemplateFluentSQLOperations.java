@@ -64,7 +64,7 @@ public class JdbcTemplateFluentSQLOperations implements FluentSQLOperations {
         if (ClassUtils.isPrimitiveOrWrapper(clazz)) {
             return jdbcOperations.queryForList(sql, clazz, entity.getParameters());
         }
-        return jdbcOperations.query(entity.getSql(), new SQLMappedRowMapper<>(clazz), entity.getParameters());
+        return jdbcOperations.query(sql, new SQLMappedRowMapper<>(clazz), entity.getParameters());
     }
 
     /**
