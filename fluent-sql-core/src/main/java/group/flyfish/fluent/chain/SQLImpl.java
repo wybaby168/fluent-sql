@@ -41,6 +41,9 @@ final class SQLImpl extends ConcatSegment<SQLImpl> implements SQLOperations, Pre
     // 调试标识
     private final boolean debug = false;
 
+    // 主表class，默认是第一个from的表为主表
+    private Class<?> primaryClass;
+
     /**
      * 绑定实现类
      *
@@ -105,6 +108,7 @@ final class SQLImpl extends ConcatSegment<SQLImpl> implements SQLOperations, Pre
      */
     @Override
     public HandleSqlChain from(Class<?> type, String alias) {
+        this.primaryClass = type;
         String mapped = AliasComposite.add(type, alias);
         return concat("FROM")
                 .concat(() -> EntityNameUtils.getTableName(type))
@@ -176,6 +180,11 @@ final class SQLImpl extends ConcatSegment<SQLImpl> implements SQLOperations, Pre
     }
 
 
+    @Override
+    public <T> T one() {
+        return one(SqlNameUtils.cast(primaryClass));
+    }
+
     /**
      * 执行并获取结果
      *
@@ -184,6 +193,11 @@ final class SQLImpl extends ConcatSegment<SQLImpl> implements SQLOperations, Pre
      */
     public <T> T one(Class<T> clazz) {
         return SHARED_OPERATIONS.selectOne(entity(), clazz);
+    }
+
+    @Override
+    public <T> List<T> list() {
+        return list(SqlNameUtils.cast(primaryClass));
     }
 
     /**
