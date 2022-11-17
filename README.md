@@ -59,6 +59,24 @@ public class FluentSqlConfig {
 }
 ```
 
+## 单表查询
+单表查询可以省略结果映射，程序自动使用主表实体进行自动映射
+
+```java
+class Test {
+    
+    public static void main(String[] args) {
+        // 单表查询所有字段
+        List<SaasTenant> tenants = select().from(SaasTenant.class).list();
+        // 单表查询指定字段，条件 年龄小于50
+        List<SaasTenant> points = select(SaasTenant::getId, SaasTenant::getName).from(SaasTenant.class)
+                .matching(where(SaasTenant::getAge).lt(50))
+                .list();
+    }
+}
+
+```
+
 ## 对比直接书写SQL
 
 本小组件主要解决的是sql的书写问题，旨在用更加优雅的方式实现sql，并且不用再担心数据库方言（SQL Dialect）
