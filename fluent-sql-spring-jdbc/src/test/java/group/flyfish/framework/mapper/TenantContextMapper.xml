@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="group.flyfish.framework.mapper.TenantContextMapper">
+    <resultMap id="Result" type="group.flyfish.framework.vo.TenantContext">
+        <id column="id" property="id"/>
+        <result column="name" property="name"/>
+        <result column="identifier" property="identifier"/>
+        <result column="datasource" property="datasource"
+                typeHandler="com.baomidou.mybatisplus.extension.handlers.JacksonTypeHandler"/>
+        <result column="storage" property="storage" typeHandler="com.baomidou.mybatisplus.extension.handlers.JacksonTypeHandler" />
+        <result column="status" property="status" />
+        <result column="enable" property="enable" />
+        <result column="quotaConfig" property="quota" typeHandler="com.baomidou.mybatisplus.extension.handlers.JacksonTypeHandler" />
+        <result column="orderTime" property="orderTime" />
+        <result column="expireTime" property="expireTime" />
+        <result column="orderType" property="orderType" />
+    </resultMap>
+
+    <select id="selectList" resultType="group.flyfish.framework.vo.TenantContext">
+        SELECT t1.`id`           as `id`,
+               t1.`name`         as `name`,
+               t1.`identifier`   as `identifier`,
+               t1.`datasource`   as `datasource`,
+               t1.`storage`      as `storage`,
+               t1.`status`       as `status`,
+               t1.`enable`       as `enable`,
+               t2.`quota_config` as `quotaConfig`,
+               t2.`order_time`   as `orderTime`,
+               t2.`expire_time`  as `expireTime`,
+               t2.`order_type`   as `orderType`
+        FROM saas_tenant `t1`
+                 LEFT JOIN saas_order `t2` ON t2.`tenant_id` = t1.`id`
+                 LEFT JOIN saas_plan `t3` ON t3.`id` = t2.`plan_id`
+        WHERE t1.`enable` = #{enable}
+    </select>
+</mapper>

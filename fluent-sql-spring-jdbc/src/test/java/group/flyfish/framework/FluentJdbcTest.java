@@ -4,24 +4,18 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.mysql.cj.jdbc.Driver;
 import group.flyfish.fluent.operations.FluentSQLOperations;
 import group.flyfish.fluent.operations.JdbcTemplateFluentSQLOperations;
-import group.flyfish.fluent.utils.data.ObjectMappers;
-import group.flyfish.framework.entity.SaasOrder;
-import group.flyfish.framework.entity.SaasPlan;
-import group.flyfish.framework.entity.SaasTenant;
-import group.flyfish.framework.vo.TenantContext;
+import group.flyfish.framework.cases.FluentSqlTestCase;
+import group.flyfish.framework.cases.JdbcTestCase;
+import group.flyfish.framework.cases.MybatisTestCase;
 import org.junit.Test;
 import org.springframework.context.annotation.Bean;
 import org.springframework.jdbc.core.JdbcOperations;
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.SimpleDriverDataSource;
 
 import javax.sql.DataSource;
 import java.sql.SQLException;
+import java.util.Arrays;
 import java.util.List;
-
-import static group.flyfish.fluent.chain.SQL.select;
-import static group.flyfish.fluent.chain.select.SelectComposite.composite;
-import static group.flyfish.fluent.query.Query.where;
 
 /**
  * 链式jdbc测试
@@ -42,27 +36,16 @@ public class FluentJdbcTest {
                 new Driver(),
                 "jdbc:mysql://127.0.0.1:3306/epi_project?autoReconnect=true&useUnicode=true&characterEncoding=utf8&zeroDateTimeBehavior=CONVERT_TO_NULL&useSSL=false&serverTimezone=Asia/Shanghai",
                 "root",
-                "oI3WtMO8h%mSYARp"
+                "Unicom#2018"
         );
-        // 基于构造器自动绑定注册，在实际应用中使用@Bean声明即可，可参考下面的demo
-        new JdbcTemplateFluentSQLOperations(new JdbcTemplate(dataSource));
-
-        // 一个平平无奇的查询
-        List<TenantContext> list = select(
-                // 查询租户全量字段
-                composite(SaasTenant::getId, SaasTenant::getName, SaasTenant::getIdentifier, SaasTenant::getDatasource,
-                        SaasTenant::getStorage, SaasTenant::getStatus, SaasTenant::getEnable),
-                // 查询套餐
-                composite(SaasOrder::getQuotaConfig, SaasOrder::getOrderTime, SaasOrder::getExpireTime,
-                        SaasOrder::getOrderType))
-                .from(SaasTenant.class)
-                .leftJoin(SaasOrder.class).on(where(SaasOrder::getTenantId).eq(SaasTenant::getId))
-                .leftJoin(SaasPlan.class).on(where(SaasPlan::getId).eq(SaasOrder::getPlanId))
-                .matching(where(SaasTenant::getEnable).eq(true))
-                .list(TenantContext.class);
-
-        // 打印效果
-        System.out.println(ObjectMappers.shared().writeValueAsString(list));
+        // 准备待测试用例
+        List<TestCase<?>> cases = Arrays.asList(
+                new JdbcTestCase(dataSource),
+                new MybatisTestCase(dataSource),
+                new FluentSqlTestCase(dataSource)
+        );
+        // 执行测试
+        cases.forEach(TestCase::test);
     }
 
     /**

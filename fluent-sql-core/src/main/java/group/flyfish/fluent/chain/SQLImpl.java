@@ -6,6 +6,7 @@ import group.flyfish.fluent.chain.common.PreSqlChain;
 import group.flyfish.fluent.chain.select.AfterOrderSqlChain;
 import group.flyfish.fluent.chain.select.AfterWhereSqlChain;
 import group.flyfish.fluent.chain.update.AfterSetSqlChain;
+import group.flyfish.fluent.debug.FluentSqlDebugger;
 import group.flyfish.fluent.entity.SQLEntity;
 import group.flyfish.fluent.operations.FluentSQLOperations;
 import group.flyfish.fluent.query.JoinCandidate;
@@ -37,9 +38,6 @@ final class SQLImpl extends ConcatSegment<SQLImpl> implements SQLOperations, Pre
     private static FluentSQLOperations SHARED_OPERATIONS;
     // 参数map，有序
     private final List<Object> parameters = new ArrayList<>();
-
-    // 调试标识
-    private final boolean debug = false;
 
     // 主表class，默认是第一个from的表为主表
     private Class<?> primaryClass;
@@ -229,7 +227,7 @@ final class SQLImpl extends ConcatSegment<SQLImpl> implements SQLOperations, Pre
     private String sql() {
         Assert.notNull(SHARED_OPERATIONS, "未指定执行数据源！");
         String sql = segments.stream().map(SQLSegment::get).collect(Collectors.joining(" "));
-        if (debug) {
+        if (FluentSqlDebugger.enabled()) {
             System.out.println("prepared sql: " + sql);
             System.out.println("prepared args:" + parameters.stream().map(ParameterUtils::convert).map(String::valueOf)
                     .collect(Collectors.joining(",")));
