@@ -7,6 +7,7 @@ import group.flyfish.fluent.operations.JdbcTemplateFluentSQLOperations;
 import group.flyfish.framework.cases.FluentSqlTestCase;
 import group.flyfish.framework.cases.JdbcTestCase;
 import group.flyfish.framework.cases.MybatisTestCase;
+import group.flyfish.framework.cases.SingleTableTestCase;
 import org.junit.Test;
 import org.springframework.context.annotation.Bean;
 import org.springframework.jdbc.core.JdbcOperations;
@@ -46,6 +47,8 @@ public class FluentJdbcTest {
         );
         // 执行测试
         cases.forEach(TestCase::test);
+        // 单表测试
+        new SingleTableTestCase().test();
     }
 
     /**
