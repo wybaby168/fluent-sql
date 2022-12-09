@@ -10,7 +10,7 @@
         <result column="storage" property="storage" typeHandler="com.baomidou.mybatisplus.extension.handlers.JacksonTypeHandler" />
         <result column="status" property="status" />
         <result column="enable" property="enable" />
-        <result column="quotaConfig" property="quota" typeHandler="com.baomidou.mybatisplus.extension.handlers.JacksonTypeHandler" />
+        <result column="quota" property="quota" jdbcType="LONGVARCHAR" typeHandler="com.baomidou.mybatisplus.extension.handlers.JacksonTypeHandler" />
         <result column="orderTime" property="orderTime" />
         <result column="expireTime" property="expireTime" />
         <result column="orderType" property="orderType" />
@@ -24,7 +24,7 @@
                t1.`storage`      as `storage`,
                t1.`status`       as `status`,
                t1.`enable`       as `enable`,
-               t2.`quota_config` as `quotaConfig`,
+               t2.`quota_config` as `quota`,
                t2.`order_time`   as `orderTime`,
                t2.`expire_time`  as `expireTime`,
                t2.`order_type`   as `orderType`

@@ -33,7 +33,7 @@ public class FluentSqlTestCase extends AbstractTestCase<List<TenantContext>> {
         // 基于构造器自动绑定注册，在实际应用中使用@Bean声明即可，可参考下面的demo
         new JdbcTemplateFluentSQLOperations(new JdbcTemplate(dataSource));
         // 启用调试
-        FluentSqlDebugger.enable();
+//        FluentSqlDebugger.enable();
     }
 
     /**

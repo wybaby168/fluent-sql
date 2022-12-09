@@ -1,6 +1,7 @@
 package group.flyfish.framework.cases;
 
 import com.baomidou.mybatisplus.extension.handlers.JacksonTypeHandler;
+import group.flyfish.fluent.utils.data.ObjectMappers;
 import group.flyfish.framework.TestCase;
 import group.flyfish.framework.entity.SaasQuota;
 import group.flyfish.framework.entity.SaasTenant;
@@ -40,6 +41,7 @@ public class MybatisTestCase extends AbstractTestCase<List<TenantContext>> {
         Configuration configuration = new Configuration(environment);
         configuration.addMapper(TenantContextMapper.class);
         TypeHandlerRegistry registry = configuration.getTypeHandlerRegistry();
+        JacksonTypeHandler.setObjectMapper(ObjectMappers.shared());
         registry.register(SaasTenant.DataSourceConfig.class, JacksonTypeHandler.class);
         registry.register(SaasQuota.class, JacksonTypeHandler.class);
         registry.register(SaasTenant.StorageConfig.class, JacksonTypeHandler.class);

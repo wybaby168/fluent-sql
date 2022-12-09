@@ -37,7 +37,7 @@ public class FluentJdbcTest {
                 new Driver(),
                 "jdbc:mysql://127.0.0.1:3306/epi_project?autoReconnect=true&useUnicode=true&characterEncoding=utf8&zeroDateTimeBehavior=CONVERT_TO_NULL&useSSL=false&serverTimezone=Asia/Shanghai",
                 "root",
-                "Unicom#2018"
+                "oI3WtMO8h%mSYARp"
         );
         // 准备待测试用例
         List<TestCase<?>> cases = Arrays.asList(
