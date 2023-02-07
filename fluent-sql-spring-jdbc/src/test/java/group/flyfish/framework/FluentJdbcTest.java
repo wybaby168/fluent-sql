@@ -7,6 +7,7 @@ import group.flyfish.fluent.operations.JdbcTemplateFluentSQLOperations;
 import group.flyfish.framework.cases.FluentSqlTestCase;
 import group.flyfish.framework.cases.JdbcTestCase;
 import group.flyfish.framework.cases.MybatisTestCase;
+import group.flyfish.framework.cases.SingleTableTestCase;
 import org.junit.Test;
 import org.springframework.context.annotation.Bean;
 import org.springframework.jdbc.core.JdbcOperations;
@@ -36,7 +37,7 @@ public class FluentJdbcTest {
                 new Driver(),
                 "jdbc:mysql://127.0.0.1:3306/epi_project?autoReconnect=true&useUnicode=true&characterEncoding=utf8&zeroDateTimeBehavior=CONVERT_TO_NULL&useSSL=false&serverTimezone=Asia/Shanghai",
                 "root",
-                "Unicom#2018"
+                "oI3WtMO8h%mSYARp"
         );
         // 准备待测试用例
         List<TestCase<?>> cases = Arrays.asList(
@@ -46,6 +47,8 @@ public class FluentJdbcTest {
         );
         // 执行测试
         cases.forEach(TestCase::test);
+        // 单表测试
+        new SingleTableTestCase().test();
     }
 
     /**
