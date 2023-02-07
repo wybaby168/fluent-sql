@@ -1,4 +1,24 @@
-# fluent-sql
+# 前言
+
+不知道大家有没有这样的感觉，就笔者而言，用了这么多年的Mybatis，再怎么说也应该“日久生情”了吧，结果可惜啊可惜，Mybatis这尊大佛还是让我爱不起来。随着开发水平的提高和对写代码这件事情本身如何更为优雅的深入研究后，让早已真正爱上面向对象模式开发的我，硬着头皮偶尔得**强制**切换到面向SQL编程，属实是令人头秃。这不，我这次任性了一回，手撸了一个java代码写SQL的东东，这就是**Fluent SQL。**
+
+
+
+# **这是个啥**
+
+大家肯定很好奇Fluent SQL是个啥，咱们先从Fluent来理解。
+
+| fluent | 英[ˈfluːənt]  美[ˈfluːənt]                                   |
+| ------ | ------------------------------------------------------------ |
+| adj.   | （说话）流利的; (文体) 流畅的; (动作、曲线等) 优美自然的; (河水等) 畅流的; |
+
+顾名思义，我们想要写出**”优美自然的SQL“**，同时又想要**流畅地**写出SQL，那就快来试试我这个组件吧。组件很轻量级，可以非常快速集成项目中，可以用于替换mybatis的XML。
+
+作为Java程序员，首选是使用Java代码来处理业务，而非将大多业务都放在XML里，面向SQL编程。都2302年了，我们也该寻求点不同的东西了。
+
+
+
+# 组件介绍
 
 基于Fluent Api实现的SQL构建器，秒杀mybatis plus的存在，易用性的API让你爽到飞起。
 
@@ -123,11 +143,11 @@ public class TestSql {
 
 建议使用静态导入，美观代码，如下：
 
-1. SQL.select => select
-2. SelectComposite.composite => composite
-3. SelectComposite.all => all
-4. Order.by => by
-5. Query.where => where
+1. `SQL.select` => `select`
+2. `SelectComposite.composite` => `composite`
+3. `SelectComposite.all` => `all`
+4. `Order.by` => `by`
+5. `Query.where` => `where`
 
 为了方便演示，我们下面的代码都基于静态导入函数：
 
