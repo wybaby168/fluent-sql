@@ -37,18 +37,21 @@ public class FluentJdbcTest {
                 new Driver(),
                 "jdbc:mysql://127.0.0.1:3306/epi_project?autoReconnect=true&useUnicode=true&characterEncoding=utf8&zeroDateTimeBehavior=CONVERT_TO_NULL&useSSL=false&serverTimezone=Asia/Shanghai",
                 "root",
-                "oI3WtMO8h%mSYARp"
+                "Unicom#2018" //   "oI3WtMO8h%mSYARp"
         );
         // 准备待测试用例
         List<TestCase<?>> cases = Arrays.asList(
+                // jdbc测试
                 new JdbcTestCase(dataSource),
+                // Mybatis测试
                 new MybatisTestCase(dataSource),
-                new FluentSqlTestCase(dataSource)
+                // FluentSQL测试
+                new FluentSqlTestCase(dataSource),
+                // 单表测试
+                new SingleTableTestCase()
         );
         // 执行测试
         cases.forEach(TestCase::test);
-        // 单表测试
-        new SingleTableTestCase().test();
     }
 
     /**

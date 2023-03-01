@@ -14,6 +14,7 @@ import group.flyfish.fluent.query.Parameterized;
 import group.flyfish.fluent.query.Query;
 import group.flyfish.fluent.update.Update;
 import group.flyfish.fluent.update.UpdateImpl;
+import group.flyfish.fluent.utils.cache.CachedWrapper;
 import group.flyfish.fluent.utils.context.AliasComposite;
 import group.flyfish.fluent.utils.data.ParameterUtils;
 import group.flyfish.fluent.utils.sql.ConcatSegment;
@@ -25,6 +26,7 @@ import org.springframework.util.Assert;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 /**
@@ -41,6 +43,9 @@ final class SQLImpl extends ConcatSegment<SQLImpl> implements SQLOperations, Pre
 
     // 主表class，默认是第一个from的表为主表
     private Class<?> primaryClass;
+
+    // sql实体提供者
+    private final Supplier<SQLEntity> entity = CachedWrapper.wrap(this::entity);
 
     /**
      * 绑定实现类
@@ -190,7 +195,7 @@ final class SQLImpl extends ConcatSegment<SQLImpl> implements SQLOperations, Pre
      * @param <T>   泛型
      */
     public <T> T one(Class<T> clazz) {
-        return SHARED_OPERATIONS.selectOne(entity(), clazz);
+        return SHARED_OPERATIONS.selectOne(entity.get(), clazz);
     }
 
     @Override
@@ -206,7 +211,7 @@ final class SQLImpl extends ConcatSegment<SQLImpl> implements SQLOperations, Pre
      */
     @Override
     public <T> List<T> list(Class<T> clazz) {
-        return SHARED_OPERATIONS.select(entity(), clazz);
+        return SHARED_OPERATIONS.select(entity.get(), clazz);
     }
 
     /**
@@ -265,6 +270,7 @@ final class SQLImpl extends ConcatSegment<SQLImpl> implements SQLOperations, Pre
      * @return 转换结果
      */
     private SQLEntity entity() {
-        return SQLEntity.of(this::sql, this::parsedParameters);
+        return SQLEntity.of(CachedWrapper.wrap(this::sql), this::parsedParameters);
     }
+
 }

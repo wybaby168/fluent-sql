@@ -43,20 +43,23 @@ public abstract class AbstractTestCase<T> implements TestCase<T> {
         Name anno = getClass().getAnnotation(Name.class);
         assert anno != null;
         String name = anno.value();
-        long current = System.currentTimeMillis();
-        T result = null;
+        print("=====准备执行任务《{0}》=====", name);
         try {
-            result = run();
+            long current = System.currentTimeMillis();
+            T result = run();
             print("【初次执行】执行任务《{0}》用时：{1}ms", name, System.currentTimeMillis() - current);
-            current = System.currentTimeMillis();
-            result = run();
+            for (int i = 0; i < 10; i ++) {
+                current = System.currentTimeMillis();
+                result = run();
+                print("【正常执行】执行任务《{0}》用时：{1}ms", name, System.currentTimeMillis() - current);
+            }
+            printResult(result);
             return result;
         } catch (Exception e) {
             print("执行失败！{0}", e.getMessage());
             throw new RuntimeException(e);
         } finally {
-            print("【正常执行】执行任务《{0}》用时：{1}ms", name, System.currentTimeMillis() - current);
-            printResult(result);
+            print("=====完成执行任务《{0}》=====");
         }
     }
 }

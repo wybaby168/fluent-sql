@@ -14,7 +14,7 @@ public interface AfterOrderSqlChain extends ExecutableSql {
     /**
      * 执行并获取结果
      *
-     * @param <T>   泛型
+     * @param <T> 泛型
      * @return 单一结果值
      */
     <T> T one();
@@ -31,7 +31,7 @@ public interface AfterOrderSqlChain extends ExecutableSql {
     /**
      * 执行并获取多条结果，以主表class为结果
      *
-     * @param <T>   结果泛型
+     * @param <T> 结果泛型
      * @return 结果列表
      */
     <T> List<T> list();
@@ -44,5 +44,4 @@ public interface AfterOrderSqlChain extends ExecutableSql {
      * @return 结果列表
      */
     <T> List<T> list(Class<T> clazz);
-
 }

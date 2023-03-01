@@ -1,7 +1,8 @@
 package group.flyfish.framework.cases;
 
-import group.flyfish.fluent.debug.FluentSqlDebugger;
+import group.flyfish.fluent.chain.select.AfterWhereSqlChain;
 import group.flyfish.fluent.operations.JdbcTemplateFluentSQLOperations;
+import group.flyfish.fluent.utils.cache.CachedWrapper;
 import group.flyfish.framework.TestCase;
 import group.flyfish.framework.entity.SaasOrder;
 import group.flyfish.framework.entity.SaasPlan;
@@ -11,6 +12,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 
 import javax.sql.DataSource;
 import java.util.List;
+import java.util.function.Supplier;
 
 import static group.flyfish.fluent.chain.SQL.select;
 import static group.flyfish.fluent.chain.select.SelectComposite.composite;
@@ -18,6 +20,8 @@ import static group.flyfish.fluent.query.Query.where;
 
 @TestCase.Name("使用fluent-sql")
 public class FluentSqlTestCase extends AbstractTestCase<List<TenantContext>> {
+
+    private AfterWhereSqlChain sql;
 
     public FluentSqlTestCase(DataSource dataSource) {
         super(dataSource);
@@ -32,6 +36,18 @@ public class FluentSqlTestCase extends AbstractTestCase<List<TenantContext>> {
     public void initialize() throws Exception {
         // 基于构造器自动绑定注册，在实际应用中使用@Bean声明即可，可参考下面的demo
         new JdbcTemplateFluentSQLOperations(new JdbcTemplate(dataSource));
+        // 缓存构建结果
+        this.sql = select(
+                // 查询租户全量字段
+                composite(SaasTenant::getId, SaasTenant::getName, SaasTenant::getIdentifier, SaasTenant::getDatasource,
+                        SaasTenant::getStorage, SaasTenant::getStatus, SaasTenant::getEnable),
+                // 查询套餐
+                composite(SaasOrder::getQuotaConfig, SaasOrder::getOrderTime, SaasOrder::getExpireTime,
+                        SaasOrder::getOrderType))
+                .from(SaasTenant.class)
+                .leftJoin(SaasOrder.class).on(where(SaasOrder::getTenantId).eq(SaasTenant::getId))
+                .leftJoin(SaasPlan.class).on(where(SaasPlan::getId).eq(SaasOrder::getPlanId))
+                .matching(where(SaasTenant::getEnable).eq(true));
         // 启用调试
 //        FluentSqlDebugger.enable();
     }
@@ -45,17 +61,6 @@ public class FluentSqlTestCase extends AbstractTestCase<List<TenantContext>> {
     @Override
     public List<TenantContext> run() throws Exception {
         // 一个平平无奇的查询
-        return select(
-                // 查询租户全量字段
-                composite(SaasTenant::getId, SaasTenant::getName, SaasTenant::getIdentifier, SaasTenant::getDatasource,
-                        SaasTenant::getStorage, SaasTenant::getStatus, SaasTenant::getEnable),
-                // 查询套餐
-                composite(SaasOrder::getQuotaConfig, SaasOrder::getOrderTime, SaasOrder::getExpireTime,
-                        SaasOrder::getOrderType))
-                .from(SaasTenant.class)
-                .leftJoin(SaasOrder.class).on(where(SaasOrder::getTenantId).eq(SaasTenant::getId))
-                .leftJoin(SaasPlan.class).on(where(SaasPlan::getId).eq(SaasOrder::getPlanId))
-                .matching(where(SaasTenant::getEnable).eq(true))
-                .list(TenantContext.class);
+        return sql.list(TenantContext.class);
     }
 }
