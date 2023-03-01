@@ -14,7 +14,6 @@ import group.flyfish.fluent.query.Parameterized;
 import group.flyfish.fluent.query.Query;
 import group.flyfish.fluent.update.Update;
 import group.flyfish.fluent.update.UpdateImpl;
-import group.flyfish.fluent.utils.cache.CachedWrapper;
 import group.flyfish.fluent.utils.context.AliasComposite;
 import group.flyfish.fluent.utils.data.ParameterUtils;
 import group.flyfish.fluent.utils.sql.ConcatSegment;
@@ -28,6 +27,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
+
+import static group.flyfish.fluent.utils.cache.CachedWrapper.wrap;
 
 /**
  * 查询工具类
@@ -45,7 +46,7 @@ final class SQLImpl extends ConcatSegment<SQLImpl> implements SQLOperations, Pre
     private Class<?> primaryClass;
 
     // sql实体提供者
-    private final Supplier<SQLEntity> entity = CachedWrapper.wrap(this::entity);
+    private final Supplier<SQLEntity> entity = wrap(this::entity);
 
     /**
      * 绑定实现类
@@ -270,7 +271,7 @@ final class SQLImpl extends ConcatSegment<SQLImpl> implements SQLOperations, Pre
      * @return 转换结果
      */
     private SQLEntity entity() {
-        return SQLEntity.of(CachedWrapper.wrap(this::sql), this::parsedParameters);
+        return SQLEntity.of(wrap(this::sql), wrap(this::parsedParameters));
     }
 
 }
