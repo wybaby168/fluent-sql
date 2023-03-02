@@ -46,8 +46,7 @@ public final class EntityNameUtils {
     }
 
     public static Map<String, String> getFields(Class<?> clazz) {
-        tryCache(clazz);
-        return COLUMN_CACHE.get(clazz);
+        return tryCache(clazz);
     }
 
     /**
@@ -78,7 +77,7 @@ public final class EntityNameUtils {
         SerializedLambda lambda = resolve(func);
         String property = SqlNameUtils.methodToProperty(lambda.getImplMethodName());
         Class<?> beanClass = resolveEntityClass(lambda);
-        String column = COLUMN_CACHE.get(beanClass).getOrDefault(property, SqlNameUtils.camelToUnderline(property));
+        String column = tryCache(beanClass).getOrDefault(property, SqlNameUtils.camelToUnderline(property));
         // 取得别名缓存
         AliasComposite.AliasCache cache = AliasComposite.sharedCache();
         // 确定最终名称
@@ -117,7 +116,9 @@ public final class EntityNameUtils {
      * @return 最终获取的类
      */
     private static Class<?> resolveEntityClass(SerializedLambda lambda) {
-        return tryCache(lambda.getInstantiatedType());
+        Class<?> type = lambda.getInstantiatedType();
+        tryCache(type);
+        return type;
     }
 
     /**
@@ -150,8 +151,7 @@ public final class EntityNameUtils {
      *
      * @param entityClass bean的类型
      */
-    private static Class<?> tryCache(Class<?> entityClass) {
-        COLUMN_CACHE.computeIfAbsent(entityClass, EntityNameUtils::buildFieldsCache);
-        return entityClass;
+    private static Map<String, String> tryCache(Class<?> entityClass) {
+        return COLUMN_CACHE.computeIfAbsent(entityClass, EntityNameUtils::buildFieldsCache);
     }
 }
