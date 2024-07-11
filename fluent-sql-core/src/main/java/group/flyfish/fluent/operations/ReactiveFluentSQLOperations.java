@@ -19,32 +19,29 @@ public interface ReactiveFluentSQLOperations {
      * 如果没有结果，将返回null
      *
      * @param entity sql实体
-     * @param clazz  目标类型
      * @param <T>    目标泛型
      * @return 查询结果
      */
     @Nullable
-    <T> Mono<T> selectOne(SQLEntity entity, Class<T> clazz);
+    <T> Mono<T> selectOne(SQLEntity<T> entity);
 
     /**
      * 执行一条sql，并且查询出所有行
      *
      * @param entity sql实体
-     * @param clazz  目标类型
      * @param <T>    目标泛型
      * @return 返回的列表
      */
-    <T> Flux<T> select(SQLEntity entity, Class<T> clazz);
+    <T> Flux<T> select(SQLEntity<T> entity);
 
     /**
      * 分页查询
      *
      * @param entity sql实体
-     * @param clazz  目标类型
      * @param <T>    目标泛型
      * @return 返回的分页对象
      */
-    <T> Mono<DataPage<T>> selectPage(SQLEntity entity, Class<T> clazz);
+    <T> Mono<DataPage<T>> selectPage(SQLEntity<T> entity);
 
     /**
      * 直接执行sql，根据update count返回更新行数，如果是查询，永远返回0
@@ -52,5 +49,5 @@ public interface ReactiveFluentSQLOperations {
      * @param entity sql实体
      * @return 更新行数
      */
-    Mono<Integer> execute(SQLEntity entity);
+    <T> Mono<Integer> execute(SQLEntity<T> entity);
 }

@@ -3,11 +3,15 @@ package group.flyfish.fluent.chain;
 import group.flyfish.fluent.chain.common.AfterJoinSqlChain;
 import group.flyfish.fluent.chain.common.HandleSqlChain;
 import group.flyfish.fluent.chain.common.PreSqlChain;
+import group.flyfish.fluent.chain.execution.BoundEntity;
+import group.flyfish.fluent.chain.execution.BoundProxy;
+import group.flyfish.fluent.chain.execution.ReactiveBoundEntity;
 import group.flyfish.fluent.chain.select.AfterOrderSqlChain;
 import group.flyfish.fluent.chain.select.AfterWhereSqlChain;
 import group.flyfish.fluent.chain.select.PieceSqlChain;
 import group.flyfish.fluent.chain.update.AfterSetSqlChain;
 import group.flyfish.fluent.debug.FluentSqlDebugger;
+import group.flyfish.fluent.entity.DataPage;
 import group.flyfish.fluent.entity.SQLEntity;
 import group.flyfish.fluent.operations.FluentSQLOperations;
 import group.flyfish.fluent.query.JoinCandidate;
@@ -21,7 +25,10 @@ import group.flyfish.fluent.utils.sql.ConcatSegment;
 import group.flyfish.fluent.utils.sql.EntityNameUtils;
 import group.flyfish.fluent.utils.sql.SFunction;
 import group.flyfish.fluent.utils.sql.SqlNameUtils;
+import lombok.RequiredArgsConstructor;
 import org.springframework.util.Assert;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -150,13 +157,23 @@ final class SQLImpl extends ConcatSegment<SQLImpl> implements SQLOperations, Pre
     }
 
     /**
+     * 下一步操作
+     *
+     * @return 结果
+     */
+    @Override
+    public HandleSqlChain then() {
+        return this;
+    }
+
+    /**
      * 不带连接条件
      *
      * @return 处理链
      */
     @Override
-    public HandleSqlChain then() {
-        return this;
+    public <T> BoundProxy<T> next() {
+        return new DefaultBoundProxy<>(SQLEntity.of(primaryClass, this::sql, this::parsedParameters));
     }
 
     /**
@@ -187,57 +204,14 @@ final class SQLImpl extends ConcatSegment<SQLImpl> implements SQLOperations, Pre
     }
 
 
-    @Override
-    public <T> T one() {
-        return one(SqlNameUtils.cast(primaryClass));
-    }
-
-    /**
-     * 执行并获取结果
-     *
-     * @param clazz 结果类
-     * @param <T>   泛型
-     */
-    @Override
-    public <T> T one(Class<T> clazz) {
-        limit(1);
-        return SHARED_OPERATIONS.selectOne(entity.get(), clazz);
-    }
-
-    @Override
-    public <T> List<T> list() {
-        return list(SqlNameUtils.cast(primaryClass));
-    }
-
-    /**
-     * 执行并获取多条结果
-     *
-     * @param clazz 结果类
-     * @return 结果列表
-     */
-    @Override
-    public <T> List<T> list(Class<T> clazz) {
-        return SHARED_OPERATIONS.select(entity.get(), clazz);
-    }
-
-    /**
-     * 执行并获取更新条数
-     *
-     * @return 更新条数
-     */
-    @Override
-    public int execute() {
-        return SHARED_OPERATIONS.execute(toEntity());
-    }
-
     /**
      * 获取实体，做下一步的事情
      *
      * @return 结果
      */
     @Override
-    public SQLEntity toEntity() {
-        return SQLEntity.of(wrap(this::sql), wrap(this::parsedParameters));
+    public <T> BoundProxy<T> as(Class<T> type) {
+        return new DefaultBoundProxy<>(SQLEntity.of(type, wrap(this::sql), wrap(this::parsedParameters)));
     }
 
     /**
@@ -288,5 +262,72 @@ final class SQLImpl extends ConcatSegment<SQLImpl> implements SQLOperations, Pre
     @Override
     public PieceSqlChain offset(int rows) {
         return concat("OFFSET").concat(String.valueOf(rows));
+    }
+
+    @RequiredArgsConstructor
+    private static class DefaultBoundProxy<T> implements BoundProxy<T> {
+
+        private final SQLEntity<T> entity;
+
+        @Override
+        public BoundEntity<T> block() {
+            return new DefaultBoundEntity<>();
+        }
+
+        @Override
+        public ReactiveBoundEntity<T> reactive() {
+            return new DefaultReactiveBoundEntity<>();
+        }
+    }
+
+    /**
+     * 默认的绑定实体
+     *
+     * @param <T>
+     */
+    private static class DefaultBoundEntity<T> implements BoundEntity<T> {
+
+        @Override
+        public T one() {
+            return null;
+        }
+
+        @Override
+        public List<T> all() {
+            return List.of();
+        }
+
+        @Override
+        public DataPage<T> page() {
+            return null;
+        }
+
+        @Override
+        public int execute() {
+            return 0;
+        }
+    }
+
+    private static class DefaultReactiveBoundEntity<T> implements ReactiveBoundEntity<T> {
+
+        @Override
+        public Mono<T> one() {
+            return null;
+        }
+
+        @Override
+        public Flux<T> all() {
+            return null;
+        }
+
+        @Override
+        public Mono<DataPage<T>> page() {
+            return null;
+        }
+
+        @Override
+        public Mono<Integer> execute() {
+            return null;
+        }
     }
 }

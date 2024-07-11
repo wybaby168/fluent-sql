@@ -1,6 +1,6 @@
 package group.flyfish.fluent.chain.common;
 
-import group.flyfish.fluent.entity.SQLEntity;
+import group.flyfish.fluent.chain.execution.BoundProxy;
 
 /**
  * 可执行的sql
@@ -10,16 +10,10 @@ import group.flyfish.fluent.entity.SQLEntity;
 public interface ExecutableSql {
 
     /**
-     * 执行并获取更新条数
+     * 进入下一步，以主表作为输出结果
      *
-     * @return 更新条数
+     * @param <T> 泛型
+     * @return 绑定操作
      */
-    int execute();
-
-    /**
-     * 转换为SQL实体
-     *
-     * @return 结果
-     */
-    SQLEntity toEntity();
+    <T> BoundProxy<T> next();
 }
