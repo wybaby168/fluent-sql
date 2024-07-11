@@ -5,6 +5,7 @@ import group.flyfish.fluent.chain.common.HandleSqlChain;
 import group.flyfish.fluent.chain.common.PreSqlChain;
 import group.flyfish.fluent.chain.select.AfterOrderSqlChain;
 import group.flyfish.fluent.chain.select.AfterWhereSqlChain;
+import group.flyfish.fluent.chain.select.PieceSqlChain;
 import group.flyfish.fluent.chain.update.AfterSetSqlChain;
 import group.flyfish.fluent.debug.FluentSqlDebugger;
 import group.flyfish.fluent.entity.SQLEntity;
@@ -39,6 +40,7 @@ final class SQLImpl extends ConcatSegment<SQLImpl> implements SQLOperations, Pre
 
     // 共享的操作
     private static FluentSQLOperations SHARED_OPERATIONS;
+
     // 参数map，有序
     private final List<Object> parameters = new ArrayList<>();
 
@@ -46,7 +48,7 @@ final class SQLImpl extends ConcatSegment<SQLImpl> implements SQLOperations, Pre
     private Class<?> primaryClass;
 
     // sql实体提供者
-    private final Supplier<SQLEntity> entity = wrap(this::entity);
+    private final Supplier<SQLEntity> entity = wrap(this::toEntity);
 
     /**
      * 绑定实现类
@@ -163,6 +165,7 @@ final class SQLImpl extends ConcatSegment<SQLImpl> implements SQLOperations, Pre
      * @param query 条件
      * @return 结果
      */
+    @Override
     public AfterWhereSqlChain matching(Query query) {
         if (withoutParameter(query)) return this;
         return concat("WHERE").concat(query);
@@ -195,7 +198,9 @@ final class SQLImpl extends ConcatSegment<SQLImpl> implements SQLOperations, Pre
      * @param clazz 结果类
      * @param <T>   泛型
      */
+    @Override
     public <T> T one(Class<T> clazz) {
+        limit(1);
         return SHARED_OPERATIONS.selectOne(entity.get(), clazz);
     }
 
@@ -222,7 +227,17 @@ final class SQLImpl extends ConcatSegment<SQLImpl> implements SQLOperations, Pre
      */
     @Override
     public int execute() {
-        return SHARED_OPERATIONS.execute(entity());
+        return SHARED_OPERATIONS.execute(toEntity());
+    }
+
+    /**
+     * 获取实体，做下一步的事情
+     *
+     * @return 结果
+     */
+    @Override
+    public SQLEntity toEntity() {
+        return SQLEntity.of(wrap(this::sql), wrap(this::parsedParameters));
     }
 
     /**
@@ -265,13 +280,13 @@ final class SQLImpl extends ConcatSegment<SQLImpl> implements SQLOperations, Pre
         return false;
     }
 
-    /**
-     * 将本实体转换为sql实体
-     *
-     * @return 转换结果
-     */
-    private SQLEntity entity() {
-        return SQLEntity.of(wrap(this::sql), wrap(this::parsedParameters));
+    @Override
+    public PieceSqlChain limit(int count) {
+        return concat("LIMIT").concat(String.valueOf(count));
     }
 
+    @Override
+    public PieceSqlChain offset(int rows) {
+        return concat("OFFSET").concat(String.valueOf(rows));
+    }
 }

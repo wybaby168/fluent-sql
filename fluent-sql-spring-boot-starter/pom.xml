@@ -24,7 +24,17 @@
         </dependency>
         <dependency>
             <groupId>group.flyfish.framework</groupId>
-            <artifactId>fluent-sql-spring-jdbc</artifactId>
+            <artifactId>fluent-sql-spring</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-r2dbc</artifactId>
+            <optional>true</optional>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-jdbc</artifactId>
+            <optional>true</optional>
         </dependency>
     </dependencies>
 </project>

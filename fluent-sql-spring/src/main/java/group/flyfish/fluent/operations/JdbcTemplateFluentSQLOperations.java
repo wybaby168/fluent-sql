@@ -1,6 +1,7 @@
 package group.flyfish.fluent.operations;
 
 import group.flyfish.fluent.chain.SQL;
+import group.flyfish.fluent.entity.DataPage;
 import group.flyfish.fluent.entity.SQLEntity;
 import group.flyfish.fluent.mapping.SQLMappedRowMapper;
 import org.springframework.dao.EmptyResultDataAccessException;
@@ -41,7 +42,7 @@ public class JdbcTemplateFluentSQLOperations implements FluentSQLOperations {
     @SuppressWarnings("all")
     public <T> T selectOne(SQLEntity entity, Class<T> clazz) {
         try {
-            String sql = entity.getSql().concat(" limit 1");
+            String sql = entity.getSql();
             if (ClassUtils.isPrimitiveOrWrapper(clazz)) {
                 return jdbcOperations.queryForObject(sql, clazz, entity.getParameters());
             }
@@ -65,6 +66,18 @@ public class JdbcTemplateFluentSQLOperations implements FluentSQLOperations {
             return jdbcOperations.queryForList(sql, clazz, entity.getParameters());
         }
         return jdbcOperations.query(sql, new SQLMappedRowMapper<>(clazz), entity.getParameters());
+    }
+
+    /**
+     * 分页查询
+     *
+     * @param entity sql实体
+     * @param clazz  目标类型
+     * @return 返回的分页对象
+     */
+    @Override
+    public <T> DataPage<T> selectPage(SQLEntity entity, Class<T> clazz) {
+        return null;
     }
 
     /**

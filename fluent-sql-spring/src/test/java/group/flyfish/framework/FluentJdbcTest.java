@@ -35,7 +35,7 @@ public class FluentJdbcTest {
     public void testSql() throws SQLException, JsonProcessingException {
         DataSource dataSource = new SimpleDriverDataSource(
                 new Driver(),
-                "jdbc:mysql://127.0.0.1:3306/epi_project?autoReconnect=true&useUnicode=true&characterEncoding=utf8&zeroDateTimeBehavior=CONVERT_TO_NULL&useSSL=false&serverTimezone=Asia/Shanghai",
+                "jdbc:mysql://127.0.0.1:3306/epi_project?autoReconnect=true&useUnicode=true&characterEncoding=utf8&zeroDateTimeBehavior=CONVERT_TO_NULL&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true",
                 "root",
                 "Unicom#2018" //   "oI3WtMO8h%mSYARp"
         );
