@@ -1,6 +1,5 @@
 package group.flyfish.fluent.entity;
 
-import lombok.Getter;
 import org.springframework.lang.NonNull;
 
 import java.util.function.Supplier;
@@ -8,10 +7,9 @@ import java.util.function.Supplier;
 /**
  * sql运行实体
  *
- * @param <T> 结果类型泛型
  * @author wangyu
  */
-public class SQLEntity<T> {
+public class SQLEntity {
 
     private static final Supplier<Object[]> EMPTY_PARAMETERS = () -> new Object[]{};
 
@@ -22,23 +20,17 @@ public class SQLEntity<T> {
     // sql参数表提供者
     private final Supplier<Object[]> parameters;
 
-    // 结果类型
-    @NonNull
-    @Getter
-    private final Class<T> resultType;
-
-    private SQLEntity(Class<T> resultType, Supplier<String> sql, Supplier<Object[]> parameters) {
-        this.resultType = resultType;
+    private SQLEntity(Supplier<String> sql, Supplier<Object[]> parameters) {
         this.sql = sql;
         this.parameters = parameters;
     }
 
-    public static <T> SQLEntity<T> of(Class<T> resultType, Supplier<String> sqlProvider) {
-        return of(resultType, sqlProvider, EMPTY_PARAMETERS);
+    public static SQLEntity of(Supplier<String> sqlProvider) {
+        return of(sqlProvider, EMPTY_PARAMETERS);
     }
 
-    public static <T> SQLEntity<T> of(Class<T> resultType, Supplier<String> sql, Supplier<Object[]> parameters) {
-        return new SQLEntity<T>(resultType, sql, parameters);
+    public static SQLEntity of(Supplier<String> sql, Supplier<Object[]> parameters) {
+        return new SQLEntity(sql, parameters);
     }
 
     public String getSql() {

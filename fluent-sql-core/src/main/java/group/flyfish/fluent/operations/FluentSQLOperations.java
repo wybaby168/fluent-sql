@@ -1,7 +1,7 @@
 package group.flyfish.fluent.operations;
 
+import group.flyfish.fluent.entity.BoundSQLEntity;
 import group.flyfish.fluent.entity.DataPage;
-import group.flyfish.fluent.entity.SQLEntity;
 import org.springframework.lang.Nullable;
 
 import java.util.List;
@@ -23,7 +23,7 @@ public interface FluentSQLOperations {
      * @return 查询结果
      */
     @Nullable
-    <T> T selectOne(SQLEntity<T> entity);
+    <T> T selectOne(BoundSQLEntity<T> entity);
 
     /**
      * 执行一条sql，并且查询出所有行
@@ -32,7 +32,7 @@ public interface FluentSQLOperations {
      * @param <T>    目标泛型
      * @return 返回的列表
      */
-    <T> List<T> select(SQLEntity<T> entity);
+    <T> List<T> select(BoundSQLEntity<T> entity);
 
     /**
      * 分页查询
@@ -41,7 +41,7 @@ public interface FluentSQLOperations {
      * @param <T>    目标泛型
      * @return 返回的分页对象
      */
-    <T> DataPage<T> selectPage(SQLEntity<T> entity);
+    <T> DataPage<T> selectPage(BoundSQLEntity<T> entity);
 
     /**
      * 直接执行sql，根据update count返回更新行数，如果是查询，永远返回0
@@ -49,5 +49,5 @@ public interface FluentSQLOperations {
      * @param entity sql实体
      * @return 更新行数
      */
-    <T> int execute(SQLEntity<T> entity);
+    <T> int execute(BoundSQLEntity<T> entity);
 }

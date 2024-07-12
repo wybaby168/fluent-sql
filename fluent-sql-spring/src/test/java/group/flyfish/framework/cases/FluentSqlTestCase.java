@@ -2,7 +2,6 @@ package group.flyfish.framework.cases;
 
 import group.flyfish.fluent.chain.select.AfterWhereSqlChain;
 import group.flyfish.fluent.operations.JdbcTemplateFluentSQLOperations;
-import group.flyfish.fluent.utils.cache.CachedWrapper;
 import group.flyfish.framework.TestCase;
 import group.flyfish.framework.entity.SaasOrder;
 import group.flyfish.framework.entity.SaasPlan;
@@ -12,7 +11,6 @@ import org.springframework.jdbc.core.JdbcTemplate;
 
 import javax.sql.DataSource;
 import java.util.List;
-import java.util.function.Supplier;
 
 import static group.flyfish.fluent.chain.SQL.select;
 import static group.flyfish.fluent.chain.select.SelectComposite.composite;
@@ -61,6 +59,6 @@ public class FluentSqlTestCase extends AbstractTestCase<List<TenantContext>> {
     @Override
     public List<TenantContext> run() throws Exception {
         // 一个平平无奇的查询
-        return sql.list(TenantContext.class);
+        return sql.as(TenantContext.class).block().all();
     }
 }

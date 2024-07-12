@@ -1,9 +1,11 @@
 package group.flyfish.fluent.operations;
 
+import group.flyfish.fluent.entity.BoundSQLEntity;
 import group.flyfish.fluent.entity.DataPage;
-import group.flyfish.fluent.entity.SQLEntity;
+import group.flyfish.fluent.mapping.ReactiveSQLMappedRowMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.r2dbc.core.DatabaseClient;
+import org.springframework.r2dbc.core.RowsFetchSpec;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -18,36 +20,34 @@ public class R2dbcFluentSQLOperations implements ReactiveFluentSQLOperations {
      * 如果没有结果，将返回null
      *
      * @param entity sql实体
-     * @param clazz  目标类型
      * @return 查询结果
      */
     @Override
-    public <T> Mono<T> selectOne(SQLEntity entity, Class<T> clazz) {
-        return null;
+    public <T> Mono<T> selectOne(BoundSQLEntity<T> entity) {
+        return forSelect(entity).one();
+
     }
 
     /**
      * 执行一条sql，并且查询出所有行
      *
      * @param entity sql实体
-     * @param clazz  目标类型
      * @return 返回的列表
      */
     @Override
-    public <T> Flux<T> select(SQLEntity entity, Class<T> clazz) {
-        return null;
+    public <T> Flux<T> select(BoundSQLEntity<T> entity) {
+        return forSelect(entity).all();
     }
 
     /**
      * 分页查询
      *
      * @param entity sql实体
-     * @param clazz  目标类型
      * @return 返回的分页对象
      */
     @Override
-    public <T> Mono<DataPage<T>> selectPage(SQLEntity entity, Class<T> clazz) {
-        return null;
+    public <T> Mono<DataPage<T>> selectPage(BoundSQLEntity<T> entity) {
+        return Mono.empty();
     }
 
     /**
@@ -57,7 +57,29 @@ public class R2dbcFluentSQLOperations implements ReactiveFluentSQLOperations {
      * @return 更新行数
      */
     @Override
-    public Mono<Integer> execute(SQLEntity entity) {
-        return null;
+    public <T> Mono<Integer> execute(BoundSQLEntity<T> entity) {
+        return resolve(entity).fetch().rowsUpdated();
+    }
+
+    /**
+     * 解析sql实体
+     *
+     * @param entity 实体信息
+     * @return 结果
+     */
+    private <T> DatabaseClient.GenericExecuteSpec resolve(BoundSQLEntity<T> entity) {
+        DatabaseClient.GenericExecuteSpec spec = databaseClient.sql(entity);
+        Object[] parameters = entity.getParameters();
+        if (null != parameters) {
+            for (int i = 0; i < parameters.length; i++) {
+                spec = spec.bind(i, parameters[i]);
+            }
+        }
+        return spec;
+    }
+
+    private <T> RowsFetchSpec<T> forSelect(BoundSQLEntity<T> entity) {
+        return resolve(entity)
+                .map(ReactiveSQLMappedRowMapper.newInstance(entity.getResultType()));
     }
 }

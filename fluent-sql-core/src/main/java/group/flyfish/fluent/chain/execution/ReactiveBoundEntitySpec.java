@@ -3,16 +3,15 @@ package group.flyfish.fluent.chain.execution;
 import group.flyfish.fluent.entity.DataPage;
 import org.springframework.lang.NonNull;
 import org.springframework.lang.Nullable;
-
-import java.util.List;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 /**
- * 已经绑定的实体
+ * 已经绑定的异步实体
  *
  * @author wangyu
  */
-public interface BoundEntity<T> {
-
+public interface ReactiveBoundEntitySpec<T> {
 
     /**
      * 执行一条sql，并且序列化为对象
@@ -22,7 +21,7 @@ public interface BoundEntity<T> {
      * @return 查询结果
      */
     @Nullable
-    T one();
+    Mono<T> one();
 
     /**
      * 执行一条sql，并且查询出所有行
@@ -30,7 +29,7 @@ public interface BoundEntity<T> {
      * @return 返回的列表
      */
     @NonNull
-    List<T> all();
+    Flux<T> all();
 
     /**
      * 分页查询
@@ -38,12 +37,12 @@ public interface BoundEntity<T> {
      * @return 返回的分页对象
      */
     @NonNull
-    DataPage<T> page();
+    Mono<DataPage<T>> page();
 
     /**
      * 直接执行sql，根据update count返回更新行数，如果是查询，永远返回0
      *
      * @return 更新行数
      */
-    int execute();
+    Mono<Integer> execute();
 }

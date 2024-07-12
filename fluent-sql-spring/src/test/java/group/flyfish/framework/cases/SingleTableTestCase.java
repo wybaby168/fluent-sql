@@ -1,5 +1,6 @@
 package group.flyfish.framework.cases;
 
+import group.flyfish.fluent.chain.execution.BoundProxy;
 import group.flyfish.framework.TestCase;
 import group.flyfish.framework.entity.SaasTenant;
 
@@ -38,6 +39,7 @@ public class SingleTableTestCase extends AbstractTestCase<List<SaasTenant>> {
     @Override
     public List<SaasTenant> run() throws Exception {
         // 单表查询
-        return select().from(SaasTenant.class).list();
+        BoundProxy<SaasTenant> proxy = select().from(SaasTenant.class).fetch();
+        return proxy.block().all();
     }
 }

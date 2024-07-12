@@ -1,8 +1,8 @@
 package group.flyfish.fluent.operations;
 
 import group.flyfish.fluent.chain.SQL;
+import group.flyfish.fluent.entity.BoundSQLEntity;
 import group.flyfish.fluent.entity.DataPage;
-import group.flyfish.fluent.entity.SQLEntity;
 import group.flyfish.fluent.mapping.SQLMappedRowMapper;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcOperations;
@@ -40,13 +40,14 @@ public class JdbcTemplateFluentSQLOperations implements FluentSQLOperations {
      */
     @Override
     @SuppressWarnings("all")
-    public <T> T selectOne(SQLEntity entity, Class<T> clazz) {
+    public <T> T selectOne(BoundSQLEntity<T> entity) {
         try {
             String sql = entity.getSql();
-            if (ClassUtils.isPrimitiveOrWrapper(clazz)) {
-                return jdbcOperations.queryForObject(sql, clazz, entity.getParameters());
+            Class<T> type = entity.getResultType();
+            if (ClassUtils.isPrimitiveOrWrapper(type)) {
+                return jdbcOperations.queryForObject(sql, type, entity.getParameters());
             }
-            return jdbcOperations.queryForObject(sql, new SQLMappedRowMapper<>(clazz), entity.getParameters());
+            return jdbcOperations.queryForObject(sql, SQLMappedRowMapper.newInstance(type), entity.getParameters());
         } catch (EmptyResultDataAccessException e) {
             return null;
         }
@@ -56,27 +57,26 @@ public class JdbcTemplateFluentSQLOperations implements FluentSQLOperations {
      * 执行一条sql，并且查询出所有行
      *
      * @param entity sql实体
-     * @param clazz  目标类型
      * @return 返回的列表
      */
     @Override
-    public <T> List<T> select(SQLEntity entity, Class<T> clazz) {
+    public <T> List<T> select(BoundSQLEntity<T> entity) {
         String sql = entity.getSql();
-        if (ClassUtils.isPrimitiveOrWrapper(clazz)) {
-            return jdbcOperations.queryForList(sql, clazz, entity.getParameters());
+        Class<T> type = entity.getResultType();
+        if (ClassUtils.isPrimitiveOrWrapper(type)) {
+            return jdbcOperations.queryForList(sql, type, entity.getParameters());
         }
-        return jdbcOperations.query(sql, new SQLMappedRowMapper<>(clazz), entity.getParameters());
+        return jdbcOperations.query(sql, SQLMappedRowMapper.newInstance(type), entity.getParameters());
     }
 
     /**
      * 分页查询
      *
      * @param entity sql实体
-     * @param clazz  目标类型
      * @return 返回的分页对象
      */
     @Override
-    public <T> DataPage<T> selectPage(SQLEntity entity, Class<T> clazz) {
+    public <T> DataPage<T> selectPage(BoundSQLEntity<T> entity) {
         return null;
     }
 
@@ -87,7 +87,7 @@ public class JdbcTemplateFluentSQLOperations implements FluentSQLOperations {
      * @return 更新行数
      */
     @Override
-    public int execute(SQLEntity entity) {
+    public int execute(BoundSQLEntity entity) {
         return jdbcOperations.update(entity.getSql(), entity.getParameters());
     }
 }

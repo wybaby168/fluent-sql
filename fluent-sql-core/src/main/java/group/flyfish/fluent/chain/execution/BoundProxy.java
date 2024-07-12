@@ -12,13 +12,13 @@ public interface BoundProxy<T> {
      *
      * @return 结果
      */
-    BoundEntity<T> block();
+    BoundEntitySpec<T> block();
 
     /**
      * 异步数据库逻辑
      *
      * @return 结果
      */
-    ReactiveBoundEntity<T> reactive();
+    ReactiveBoundEntitySpec<T> reactive();
 
 }

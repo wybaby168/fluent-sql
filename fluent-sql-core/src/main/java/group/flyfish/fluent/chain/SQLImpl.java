@@ -3,17 +3,19 @@ package group.flyfish.fluent.chain;
 import group.flyfish.fluent.chain.common.AfterJoinSqlChain;
 import group.flyfish.fluent.chain.common.HandleSqlChain;
 import group.flyfish.fluent.chain.common.PreSqlChain;
-import group.flyfish.fluent.chain.execution.BoundEntity;
+import group.flyfish.fluent.chain.execution.BoundEntitySpec;
 import group.flyfish.fluent.chain.execution.BoundProxy;
-import group.flyfish.fluent.chain.execution.ReactiveBoundEntity;
+import group.flyfish.fluent.chain.execution.ReactiveBoundEntitySpec;
 import group.flyfish.fluent.chain.select.AfterOrderSqlChain;
 import group.flyfish.fluent.chain.select.AfterWhereSqlChain;
 import group.flyfish.fluent.chain.select.PieceSqlChain;
 import group.flyfish.fluent.chain.update.AfterSetSqlChain;
 import group.flyfish.fluent.debug.FluentSqlDebugger;
+import group.flyfish.fluent.entity.BoundSQLEntity;
 import group.flyfish.fluent.entity.DataPage;
 import group.flyfish.fluent.entity.SQLEntity;
 import group.flyfish.fluent.operations.FluentSQLOperations;
+import group.flyfish.fluent.operations.ReactiveFluentSQLOperations;
 import group.flyfish.fluent.query.JoinCandidate;
 import group.flyfish.fluent.query.Parameterized;
 import group.flyfish.fluent.query.Query;
@@ -48,6 +50,8 @@ final class SQLImpl extends ConcatSegment<SQLImpl> implements SQLOperations, Pre
     // 共享的操作
     private static FluentSQLOperations SHARED_OPERATIONS;
 
+    private static ReactiveFluentSQLOperations SHARED_REACTIVE_OPERATIONS;
+
     // 参数map，有序
     private final List<Object> parameters = new ArrayList<>();
 
@@ -55,7 +59,7 @@ final class SQLImpl extends ConcatSegment<SQLImpl> implements SQLOperations, Pre
     private Class<?> primaryClass;
 
     // sql实体提供者
-    private final Supplier<SQLEntity> entity = wrap(this::toEntity);
+    private final Supplier<SQLEntity> entity = wrap(this::entity);
 
     /**
      * 绑定实现类
@@ -64,6 +68,16 @@ final class SQLImpl extends ConcatSegment<SQLImpl> implements SQLOperations, Pre
      */
     public static void bind(FluentSQLOperations operations) {
         SHARED_OPERATIONS = operations;
+    }
+
+
+    /**
+     * 绑定实现类
+     *
+     * @param operations r2dbc操作
+     */
+    public static void bind(ReactiveFluentSQLOperations operations) {
+        SHARED_REACTIVE_OPERATIONS = operations;
     }
 
     /**
@@ -172,8 +186,10 @@ final class SQLImpl extends ConcatSegment<SQLImpl> implements SQLOperations, Pre
      * @return 处理链
      */
     @Override
-    public <T> BoundProxy<T> next() {
-        return new DefaultBoundProxy<>(SQLEntity.of(primaryClass, this::sql, this::parsedParameters));
+    @SuppressWarnings("unchecked")
+    public <T> BoundProxy<T> fetch() {
+        // 通过主类构建实体
+        return new DefaultBoundProxy<>(BoundSQLEntity.of(this.entity, (Class<T>) primaryClass));
     }
 
     /**
@@ -211,7 +227,7 @@ final class SQLImpl extends ConcatSegment<SQLImpl> implements SQLOperations, Pre
      */
     @Override
     public <T> BoundProxy<T> as(Class<T> type) {
-        return new DefaultBoundProxy<>(SQLEntity.of(type, wrap(this::sql), wrap(this::parsedParameters)));
+        return new DefaultBoundProxy<>(BoundSQLEntity.of(this.entity, type));
     }
 
     /**
@@ -254,6 +270,15 @@ final class SQLImpl extends ConcatSegment<SQLImpl> implements SQLOperations, Pre
         return false;
     }
 
+    /**
+     * 将本实体转换为sql实体
+     *
+     * @return 转换结果
+     */
+    private SQLEntity entity() {
+        return SQLEntity.of(wrap(this::sql), wrap(this::parsedParameters));
+    }
+
     @Override
     public PieceSqlChain limit(int count) {
         return concat("LIMIT").concat(String.valueOf(count));
@@ -267,16 +292,16 @@ final class SQLImpl extends ConcatSegment<SQLImpl> implements SQLOperations, Pre
     @RequiredArgsConstructor
     private static class DefaultBoundProxy<T> implements BoundProxy<T> {
 
-        private final SQLEntity<T> entity;
+        private final BoundSQLEntity<T> entity;
 
         @Override
-        public BoundEntity<T> block() {
-            return new DefaultBoundEntity<>();
+        public BoundEntitySpec<T> block() {
+            return new DefaultBoundEntitySpec<>(entity);
         }
 
         @Override
-        public ReactiveBoundEntity<T> reactive() {
-            return new DefaultReactiveBoundEntity<>();
+        public ReactiveBoundEntitySpec<T> reactive() {
+            return new DefaultReactiveBoundEntitySpec<>(entity);
         }
     }
 
@@ -285,49 +310,60 @@ final class SQLImpl extends ConcatSegment<SQLImpl> implements SQLOperations, Pre
      *
      * @param <T>
      */
-    private static class DefaultBoundEntity<T> implements BoundEntity<T> {
+    @RequiredArgsConstructor
+    private static class DefaultBoundEntitySpec<T> implements BoundEntitySpec<T> {
+
+        private final BoundSQLEntity<T> entity;
 
         @Override
         public T one() {
-            return null;
+            return SHARED_OPERATIONS.selectOne(entity);
         }
 
         @Override
         public List<T> all() {
-            return List.of();
+            return SHARED_OPERATIONS.select(entity);
         }
 
         @Override
         public DataPage<T> page() {
-            return null;
+            return SHARED_OPERATIONS.selectPage(entity);
         }
 
         @Override
         public int execute() {
-            return 0;
+            return SHARED_OPERATIONS.execute(entity);
         }
     }
 
-    private static class DefaultReactiveBoundEntity<T> implements ReactiveBoundEntity<T> {
+    /**
+     * 默认的异步绑定实体
+     *
+     * @param <T> 泛型
+     */
+    @RequiredArgsConstructor
+    private static class DefaultReactiveBoundEntitySpec<T> implements ReactiveBoundEntitySpec<T> {
+
+        private final BoundSQLEntity<T> entity;
 
         @Override
         public Mono<T> one() {
-            return null;
+            return SHARED_REACTIVE_OPERATIONS.selectOne(entity);
         }
 
         @Override
         public Flux<T> all() {
-            return null;
+            return SHARED_REACTIVE_OPERATIONS.select(entity);
         }
 
         @Override
         public Mono<DataPage<T>> page() {
-            return null;
+            return SHARED_REACTIVE_OPERATIONS.selectPage(entity);
         }
 
         @Override
         public Mono<Integer> execute() {
-            return null;
+            return SHARED_REACTIVE_OPERATIONS.execute(entity);
         }
     }
 }
