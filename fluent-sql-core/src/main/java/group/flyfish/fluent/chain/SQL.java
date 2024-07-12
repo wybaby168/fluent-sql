@@ -3,6 +3,7 @@ package group.flyfish.fluent.chain;
 import group.flyfish.fluent.chain.common.PreSqlChain;
 import group.flyfish.fluent.chain.select.SelectComposite;
 import group.flyfish.fluent.operations.FluentSQLOperations;
+import group.flyfish.fluent.operations.ReactiveFluentSQLOperations;
 import group.flyfish.fluent.update.Update;
 import group.flyfish.fluent.utils.sql.SFunction;
 
@@ -59,6 +60,15 @@ public interface SQL {
      * @param operations jdbc操作
      */
     static void bind(FluentSQLOperations operations) {
+        SQLImpl.bind(operations);
+    }
+
+    /**
+     * 绑定数据源上下文，可自由切换实现
+     *
+     * @param operations jdbc操作
+     */
+    static void bind(ReactiveFluentSQLOperations operations) {
         SQLImpl.bind(operations);
     }
 }

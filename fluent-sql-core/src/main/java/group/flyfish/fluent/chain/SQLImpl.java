@@ -236,7 +236,6 @@ final class SQLImpl extends ConcatSegment<SQLImpl> implements SQLOperations, Pre
      * @return 构建结果
      */
     private String sql() {
-        Assert.notNull(SHARED_OPERATIONS, "未指定执行数据源！");
         String sql = segments.stream().map(SQLSegment::get).collect(Collectors.joining(" "));
         if (FluentSqlDebugger.enabled()) {
             System.out.println("prepared sql: " + sql);
@@ -310,10 +309,14 @@ final class SQLImpl extends ConcatSegment<SQLImpl> implements SQLOperations, Pre
      *
      * @param <T>
      */
-    @RequiredArgsConstructor
     private static class DefaultBoundEntitySpec<T> implements BoundEntitySpec<T> {
 
         private final BoundSQLEntity<T> entity;
+
+        private DefaultBoundEntitySpec(BoundSQLEntity<T> entity) {
+            Assert.notNull(SHARED_OPERATIONS, "未指定执行数据源！");
+            this.entity = entity;
+        }
 
         @Override
         public T one() {
@@ -341,10 +344,14 @@ final class SQLImpl extends ConcatSegment<SQLImpl> implements SQLOperations, Pre
      *
      * @param <T> 泛型
      */
-    @RequiredArgsConstructor
     private static class DefaultReactiveBoundEntitySpec<T> implements ReactiveBoundEntitySpec<T> {
 
         private final BoundSQLEntity<T> entity;
+
+        private DefaultReactiveBoundEntitySpec(BoundSQLEntity<T> entity) {
+            Assert.notNull(SHARED_REACTIVE_OPERATIONS, "未指定执行数据源！");
+            this.entity = entity;
+        }
 
         @Override
         public Mono<T> one() {

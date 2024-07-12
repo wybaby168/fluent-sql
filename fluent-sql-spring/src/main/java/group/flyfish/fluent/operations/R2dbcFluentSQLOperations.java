@@ -1,18 +1,22 @@
 package group.flyfish.fluent.operations;
 
+import group.flyfish.fluent.chain.SQL;
 import group.flyfish.fluent.entity.BoundSQLEntity;
 import group.flyfish.fluent.entity.DataPage;
 import group.flyfish.fluent.mapping.ReactiveSQLMappedRowMapper;
-import lombok.RequiredArgsConstructor;
 import org.springframework.r2dbc.core.DatabaseClient;
 import org.springframework.r2dbc.core.RowsFetchSpec;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-@RequiredArgsConstructor
 public class R2dbcFluentSQLOperations implements ReactiveFluentSQLOperations {
 
     private final DatabaseClient databaseClient;
+
+    public R2dbcFluentSQLOperations(DatabaseClient databaseClient) {
+        this.databaseClient = databaseClient;
+        SQL.bind(this);
+    }
 
     /**
      * 执行一条sql，并且序列化为对象
