@@ -40,7 +40,7 @@
  <dependency>
     <artifactId>fluent-sql-spring-boot-starter</artifactId>
     <groupId>group.flyfish.framework</groupId>
-    <version>0.0.5</version>
+    <version>0.1.0</version>
 </dependency>
 ```
 
@@ -50,7 +50,7 @@
  <dependency>
     <artifactId>fluent-sql-spring-jdbc</artifactId>
     <groupId>group.flyfish.framework</groupId>
-    <version>0.0.5</version>
+    <version>0.1.0</version>
 </dependency>
 ```
 
