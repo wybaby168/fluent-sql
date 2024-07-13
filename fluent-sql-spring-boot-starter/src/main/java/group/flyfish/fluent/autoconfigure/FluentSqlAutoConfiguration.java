@@ -11,6 +11,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
+import org.springframework.boot.autoconfigure.r2dbc.R2dbcAutoConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -23,11 +24,11 @@ import javax.sql.DataSource;
  *
  * @author wangyu
  */
-@AutoConfigureAfter(DataSourceAutoConfiguration.class)
 @Import({R2dbcFluentSqlAutoConfigure.class, JdbcFluentSqlAutoConfigure.class})
 public class FluentSqlAutoConfiguration {
 
     @ConditionalOnClass(DatabaseClient.class)
+    @AutoConfigureAfter(R2dbcAutoConfiguration.class)
     static class R2dbcFluentSqlAutoConfigure {
 
         /**
@@ -44,6 +45,7 @@ public class FluentSqlAutoConfiguration {
     }
 
     @ConditionalOnClass(DataSource.class)
+    @AutoConfigureAfter(DataSourceAutoConfiguration.class)
     static class JdbcFluentSqlAutoConfigure {
 
         /**

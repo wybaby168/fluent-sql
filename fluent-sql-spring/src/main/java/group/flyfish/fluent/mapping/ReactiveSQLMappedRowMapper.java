@@ -1,5 +1,6 @@
 package group.flyfish.fluent.mapping;
 
+import io.r2dbc.spi.ColumnMetadata;
 import io.r2dbc.spi.Row;
 import io.r2dbc.spi.RowMetadata;
 import org.springframework.dao.DataRetrievalFailureException;
@@ -48,7 +49,8 @@ public class ReactiveSQLMappedRowMapper<T> implements BiFunction<Row, RowMetadat
     public T apply(Row row, RowMetadata rowMetadata) {
         MappingBean<T> bean = descriptor.create();
 
-        for (String column : rowMetadata.getColumnNames()) {
+        for (ColumnMetadata metadata : rowMetadata.getColumnMetadatas()) {
+            String column = metadata.getName();
             try {
                 bean.setValue(column, type -> row.get(column, type));
             } catch (Exception ex) {

@@ -4,6 +4,7 @@ import group.flyfish.fluent.utils.cache.LRUCache;
 import group.flyfish.fluent.utils.context.AliasComposite;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
+import org.springframework.core.annotation.MergedAnnotations;
 import org.springframework.util.ReflectionUtils;
 import org.springframework.util.StringUtils;
 
@@ -26,6 +27,9 @@ import static group.flyfish.fluent.utils.sql.SqlNameUtils.wrap;
  */
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public final class EntityNameUtils {
+
+    private static final String JPA_TABLE = "javax.persistence.Table";
+    private static final String SPRING_DATA_TABLE = "org.springframework.data.relational.core.mapping.Table";
 
     // SerializedLambda 反序列化缓存
     private static final Map<String, WeakReference<SerializedLambda>> FUNC_CACHE = new ConcurrentHashMap<>();
@@ -57,9 +61,18 @@ public final class EntityNameUtils {
      */
     public static String getTableName(Class<?> entityClass) {
         return TABLE_CACHE.computeIfAbsent(entityClass, k -> {
-            Table table = entityClass.getAnnotation(Table.class);
-            if (null != table && StringUtils.hasText(table.name())) {
-                return table.name();
+            MergedAnnotations annotations = MergedAnnotations.from(entityClass);
+            if (annotations.isPresent(JPA_TABLE)) {
+                String tableName = annotations.get(JPA_TABLE).getString("name");
+                if (StringUtils.hasText(tableName)) {
+                    return tableName;
+                }
+            }
+            if (annotations.isPresent(SPRING_DATA_TABLE)) {
+                String tableName = annotations.get(SPRING_DATA_TABLE).getString("name");
+                if (StringUtils.hasText(tableName)) {
+                    return tableName;
+                }
             }
             return wrap(SqlNameUtils.camelToUnderline(entityClass.getSimpleName()));
         });
