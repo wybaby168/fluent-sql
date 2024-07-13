@@ -5,14 +5,14 @@
     <parent>
         <artifactId>fluent-sql</artifactId>
         <groupId>group.flyfish.framework</groupId>
-        <version>0.1.0</version>
+        <version>1.0.0</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>fluent-sql-annotations</artifactId>
 
     <properties>
-        <maven.compiler.source>8</maven.compiler.source>
-        <maven.compiler.target>8</maven.compiler.target>
+        <maven.compiler.source>17</maven.compiler.source>
+        <maven.compiler.target>17</maven.compiler.target>
     </properties>
 </project>

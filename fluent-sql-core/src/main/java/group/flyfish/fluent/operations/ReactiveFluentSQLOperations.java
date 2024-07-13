@@ -2,7 +2,6 @@ package group.flyfish.fluent.operations;
 
 import group.flyfish.fluent.entity.BoundSQLEntity;
 import group.flyfish.fluent.entity.DataPage;
-import group.flyfish.fluent.entity.SQLEntity;
 import org.springframework.lang.Nullable;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -50,5 +49,5 @@ public interface ReactiveFluentSQLOperations {
      * @param entity sql实体
      * @return 更新行数
      */
-    <T> Mono<Integer> execute(BoundSQLEntity<T> entity);
+    <T> Mono<Long> execute(BoundSQLEntity<T> entity);
 }

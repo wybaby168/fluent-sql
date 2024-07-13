@@ -61,7 +61,7 @@ public class R2dbcFluentSQLOperations implements ReactiveFluentSQLOperations {
      * @return 更新行数
      */
     @Override
-    public <T> Mono<Integer> execute(BoundSQLEntity<T> entity) {
+    public <T> Mono<Long> execute(BoundSQLEntity<T> entity) {
         return resolve(entity).fetch().rowsUpdated();
     }
 

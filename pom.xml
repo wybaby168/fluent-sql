@@ -7,7 +7,7 @@
     <groupId>group.flyfish.framework</groupId>
     <artifactId>fluent-sql</artifactId>
     <packaging>pom</packaging>
-    <version>0.1.0</version>
+    <version>1.0.0</version>
 
     <name>fluent-sql</name>
     <description>A very fast sql generation engine using fluent-style api. Help you start your work without mybatis！</description>
@@ -35,12 +35,12 @@
     </modules>
 
     <properties>
-        <maven.compiler.source>8</maven.compiler.source>
-        <maven.compiler.target>8</maven.compiler.target>
+        <maven.compiler.source>17</maven.compiler.source>
+        <maven.compiler.target>17</maven.compiler.target>
         <lombok.version>1.18.24</lombok.version>
         <jackson.version>2.17.2</jackson.version>
-        <spring-boot.version>2.7.18</spring-boot.version>
-        <spring.version>5.3.22</spring.version>
+        <spring-boot.version>3.3.1</spring-boot.version>
+        <spring.version>6.1.10</spring.version>
     </properties>
 
     <!-- 开发人员信息 -->
@@ -156,6 +156,12 @@
                 <groupId>mysql</groupId>
                 <artifactId>mysql-connector-java</artifactId>
                 <version>8.0.29</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>io.asyncer</groupId>
+                <artifactId>r2dbc-mysql</artifactId>
+                <version>1.1.3</version>
                 <scope>test</scope>
             </dependency>
             <dependency>

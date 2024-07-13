@@ -44,5 +44,5 @@ public interface ReactiveBoundEntitySpec<T> {
      *
      * @return 更新行数
      */
-    Mono<Integer> execute();
+    Mono<Long> execute();
 }

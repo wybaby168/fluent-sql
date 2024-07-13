@@ -369,7 +369,7 @@ final class SQLImpl extends ConcatSegment<SQLImpl> implements SQLOperations, Pre
         }
 
         @Override
-        public Mono<Integer> execute() {
+        public Mono<Long> execute() {
             return SHARED_REACTIVE_OPERATIONS.execute(entity);
         }
     }
