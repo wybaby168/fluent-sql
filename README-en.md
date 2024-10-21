@@ -1,3 +1,5 @@
+[中文版](README.md) | English
+
 # Preface
 
 As developers, we've likely all used MyBatis at some point. But speaking for myself, despite its widespread use, I've never truly grown fond of it. While I appreciate the elegance of object-oriented programming, MyBatis often pulls me back into the realm of SQL-oriented thinking. 
