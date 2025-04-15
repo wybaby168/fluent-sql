@@ -2,7 +2,6 @@ package group.flyfish.fluent.operations;
 
 import group.flyfish.fluent.chain.SQL;
 import group.flyfish.fluent.entity.BoundSQLEntity;
-import group.flyfish.fluent.entity.DataPage;
 import group.flyfish.fluent.mapping.ReactiveSQLMappedRowMapper;
 import org.springframework.r2dbc.core.DatabaseClient;
 import org.springframework.r2dbc.core.RowsFetchSpec;
@@ -41,17 +40,6 @@ public class R2dbcFluentSQLOperations implements ReactiveFluentSQLOperations {
     @Override
     public <T> Flux<T> select(BoundSQLEntity<T> entity) {
         return forSelect(entity).all();
-    }
-
-    /**
-     * 分页查询
-     *
-     * @param entity sql实体
-     * @return 返回的分页对象
-     */
-    @Override
-    public <T> Mono<DataPage<T>> selectPage(BoundSQLEntity<T> entity) {
-        return Mono.empty();
     }
 
     /**

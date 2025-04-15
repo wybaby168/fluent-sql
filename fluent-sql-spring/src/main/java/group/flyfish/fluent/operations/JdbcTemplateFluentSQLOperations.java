@@ -2,7 +2,6 @@ package group.flyfish.fluent.operations;
 
 import group.flyfish.fluent.chain.SQL;
 import group.flyfish.fluent.entity.BoundSQLEntity;
-import group.flyfish.fluent.entity.DataPage;
 import group.flyfish.fluent.mapping.SQLMappedRowMapper;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcOperations;
@@ -70,24 +69,13 @@ public class JdbcTemplateFluentSQLOperations implements FluentSQLOperations {
     }
 
     /**
-     * 分页查询
-     *
-     * @param entity sql实体
-     * @return 返回的分页对象
-     */
-    @Override
-    public <T> DataPage<T> selectPage(BoundSQLEntity<T> entity) {
-        return null;
-    }
-
-    /**
      * 直接执行sql，根据update count返回更新行数，如果是查询，永远返回0
      *
      * @param entity sql实体
      * @return 更新行数
      */
     @Override
-    public int execute(BoundSQLEntity entity) {
+    public <T> int execute(BoundSQLEntity<T> entity) {
         return jdbcOperations.update(entity.getSql(), entity.getParameters());
     }
 }

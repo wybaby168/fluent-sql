@@ -28,6 +28,7 @@ import group.flyfish.fluent.utils.sql.EntityNameUtils;
 import group.flyfish.fluent.utils.sql.SFunction;
 import group.flyfish.fluent.utils.sql.SqlNameUtils;
 import lombok.RequiredArgsConstructor;
+import org.springframework.lang.NonNull;
 import org.springframework.util.Assert;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -35,6 +36,8 @@ import reactor.core.publisher.Mono;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
@@ -50,16 +53,26 @@ final class SQLImpl extends ConcatSegment<SQLImpl> implements SQLOperations, Pre
     // 共享的操作
     private static FluentSQLOperations SHARED_OPERATIONS;
 
+    // 共享的异步操作
     private static ReactiveFluentSQLOperations SHARED_REACTIVE_OPERATIONS;
+
+    // 是否正在计数
+    private final AtomicBoolean counting = new AtomicBoolean(false);
 
     // 参数map，有序
     private final List<Object> parameters = new ArrayList<>();
 
+    // 为select字段存放的集合
+    private final List<SQLSegment> selections = new ArrayList<>();
+
     // 主表class，默认是第一个from的表为主表
     private Class<?> primaryClass;
 
-    // sql实体提供者
-    private final Supplier<SQLEntity> entity = wrap(this::entity);
+    // sql实体引用，区分计数sql
+    private final Supplier<SQLEntity> entityRef = wrap(this::entity, counting::get);
+
+    // 参数引用
+    private final Supplier<Object[]> parametersRef = wrap(this::parsedParameters);
 
     /**
      * 绑定实现类
@@ -89,12 +102,19 @@ final class SQLImpl extends ConcatSegment<SQLImpl> implements SQLOperations, Pre
     @SafeVarargs
     @Override
     public final <T> PreSqlChain select(SFunction<T, ?>... fields) {
-        String linker = !segments.isEmpty() ? "," : "SELECT";
-        if (fields != null && fields.length != 0) {
-            return this.concat(linker)
-                    .concat(() -> Arrays.stream(fields).map(SFunction::getSelect).collect(Collectors.joining(",")));
+        // 追加字段
+        if (fields != null && fields.length > 0) {
+            if (!selections.isEmpty()) {
+                selections.add(() -> ",");
+            }
+            selections.add(() -> Arrays.stream(fields)
+                    .map(SFunction::getSelect).collect(Collectors.joining(",")));
         }
-        return this.concat(linker).concat("*");
+        // 首个项，添加SELECT
+        if (segments.isEmpty()) {
+            return this.concat("SELECT");
+        }
+        return this;
     }
 
     /**
@@ -136,10 +156,31 @@ final class SQLImpl extends ConcatSegment<SQLImpl> implements SQLOperations, Pre
     @Override
     public HandleSqlChain from(Class<?> type, String alias) {
         this.primaryClass = type;
-        String mapped = AliasComposite.add(type, alias);
-        return concat("FROM")
+        String key = type.getCanonicalName();
+        return this
+                .ctxPut(ctx -> ctx.put(key, AliasComposite.add(type, alias)))
+                .concat(this::applySelections)
+                .concat("FROM")
                 .concat(() -> EntityNameUtils.getTableName(type))
-                .concat(() -> SqlNameUtils.wrap(mapped));
+                .concat(() -> SqlNameUtils.wrap(this.ctx(key)));
+    }
+
+    /**
+     * 添加选择项的逻辑
+     */
+    private String applySelections() {
+        // 判断渲染模式
+        if (counting.get()) {
+            // 设置后立即回正
+            return "COUNT(1)";
+        }
+        if (selections.isEmpty()) {
+            // 选择项为空，查询全部字段
+            return "*";
+        } else {
+            // 选择项不为空，查询指定字段
+            return selections.stream().map(SQLSegment::get).collect(Collectors.joining());
+        }
     }
 
     /**
@@ -152,10 +193,11 @@ final class SQLImpl extends ConcatSegment<SQLImpl> implements SQLOperations, Pre
      */
     @Override
     public AfterJoinSqlChain join(JoinCandidate type, Class<?> clazz, String alias) {
-        String mapped = AliasComposite.add(clazz, alias);
-        return concat(type)
+        String key = clazz.getCanonicalName();
+        return ctxPut(ctx -> ctx.put(key, AliasComposite.add(clazz, alias)))
+                .concat(type)
                 .concat(() -> EntityNameUtils.getTableName(clazz))
-                .concat(() -> SqlNameUtils.wrap(mapped));
+                .concat(() -> SqlNameUtils.wrap(ctx(key)));
     }
 
     /**
@@ -189,7 +231,7 @@ final class SQLImpl extends ConcatSegment<SQLImpl> implements SQLOperations, Pre
     @SuppressWarnings("unchecked")
     public <T> BoundProxy<T> fetch() {
         // 通过主类构建实体
-        return new DefaultBoundProxy<>(BoundSQLEntity.of(this.entity, (Class<T>) primaryClass));
+        return new DefaultBoundProxy<>((Class<T>) primaryClass);
     }
 
     /**
@@ -214,7 +256,9 @@ final class SQLImpl extends ConcatSegment<SQLImpl> implements SQLOperations, Pre
     public AfterOrderSqlChain order(Order... orders) {
         if (null != orders && orders.length != 0) {
             return concat("ORDER BY")
-                    .concat(() -> Arrays.stream(orders).map(SQLSegment::get).collect(Collectors.joining(",")));
+                    .concat(() -> Arrays.stream(orders).map(SQLSegment::get)
+                            .filter(Objects::nonNull)
+                            .collect(Collectors.joining(",")));
         }
         return this;
     }
@@ -227,7 +271,7 @@ final class SQLImpl extends ConcatSegment<SQLImpl> implements SQLOperations, Pre
      */
     @Override
     public <T> BoundProxy<T> as(Class<T> type) {
-        return new DefaultBoundProxy<>(BoundSQLEntity.of(this.entity, type));
+        return new DefaultBoundProxy<>(type);
     }
 
     /**
@@ -236,13 +280,13 @@ final class SQLImpl extends ConcatSegment<SQLImpl> implements SQLOperations, Pre
      * @return 构建结果
      */
     private String sql() {
-        String sql = segments.stream().map(SQLSegment::get).collect(Collectors.joining(" "));
+        String sql = this.get();
+        // 拼接sql
         if (FluentSqlDebugger.enabled()) {
             System.out.println("prepared sql: " + sql);
             System.out.println("prepared args:" + parameters.stream().map(ParameterUtils::convert).map(String::valueOf)
                     .collect(Collectors.joining(",")));
         }
-        AliasComposite.flush();
         return sql;
     }
 
@@ -275,7 +319,7 @@ final class SQLImpl extends ConcatSegment<SQLImpl> implements SQLOperations, Pre
      * @return 转换结果
      */
     private SQLEntity entity() {
-        return SQLEntity.of(wrap(this::sql), wrap(this::parsedParameters));
+        return SQLEntity.of(wrap(this::sql), parametersRef);
     }
 
     @Override
@@ -289,18 +333,18 @@ final class SQLImpl extends ConcatSegment<SQLImpl> implements SQLOperations, Pre
     }
 
     @RequiredArgsConstructor
-    private static class DefaultBoundProxy<T> implements BoundProxy<T> {
+    private class DefaultBoundProxy<T> implements BoundProxy<T> {
 
-        private final BoundSQLEntity<T> entity;
+        private final Class<T> type;
 
         @Override
         public BoundEntitySpec<T> block() {
-            return new DefaultBoundEntitySpec<>(entity);
+            return new DefaultBoundEntitySpec<>(type);
         }
 
         @Override
         public ReactiveBoundEntitySpec<T> reactive() {
-            return new DefaultReactiveBoundEntitySpec<>(entity);
+            return new DefaultReactiveBoundEntitySpec<>(type);
         }
     }
 
@@ -309,13 +353,13 @@ final class SQLImpl extends ConcatSegment<SQLImpl> implements SQLOperations, Pre
      *
      * @param <T>
      */
-    private static class DefaultBoundEntitySpec<T> implements BoundEntitySpec<T> {
+    private class DefaultBoundEntitySpec<T> implements BoundEntitySpec<T> {
 
         private final BoundSQLEntity<T> entity;
 
-        private DefaultBoundEntitySpec(BoundSQLEntity<T> entity) {
+        private DefaultBoundEntitySpec(Class<T> type) {
             Assert.notNull(SHARED_OPERATIONS, "未指定执行数据源！");
-            this.entity = entity;
+            this.entity = BoundSQLEntity.of(entityRef, type);
         }
 
         @Override
@@ -324,13 +368,35 @@ final class SQLImpl extends ConcatSegment<SQLImpl> implements SQLOperations, Pre
         }
 
         @Override
+        @NonNull
         public List<T> all() {
             return SHARED_OPERATIONS.select(entity);
         }
 
+        /**
+         * 忽略查询字段，查询当前条件下的数量
+         *
+         * @return 数量
+         */
         @Override
-        public DataPage<T> page() {
-            return SHARED_OPERATIONS.selectPage(entity);
+        public int count() {
+            try {
+                counting.set(true);
+                Integer result = SHARED_OPERATIONS.selectOne(BoundSQLEntity.of(entityRef, Integer.class));
+                return null == result ? 0 : result;
+            } finally {
+                counting.set(false);
+            }
+        }
+
+        @Override
+        @NonNull
+        public DataPage<T> page(DataPage<T> page) {
+            int count = count();
+            List<T> list = SHARED_OPERATIONS.select(entity.paged(page));
+            page.setTotal(count);
+            page.setList(list);
+            return page;
         }
 
         @Override
@@ -344,13 +410,13 @@ final class SQLImpl extends ConcatSegment<SQLImpl> implements SQLOperations, Pre
      *
      * @param <T> 泛型
      */
-    private static class DefaultReactiveBoundEntitySpec<T> implements ReactiveBoundEntitySpec<T> {
+    private class DefaultReactiveBoundEntitySpec<T> implements ReactiveBoundEntitySpec<T> {
 
         private final BoundSQLEntity<T> entity;
 
-        private DefaultReactiveBoundEntitySpec(BoundSQLEntity<T> entity) {
+        private DefaultReactiveBoundEntitySpec(Class<T> type) {
             Assert.notNull(SHARED_REACTIVE_OPERATIONS, "未指定执行数据源！");
-            this.entity = entity;
+            this.entity = BoundSQLEntity.of(entityRef, type);
         }
 
         @Override
@@ -359,13 +425,44 @@ final class SQLImpl extends ConcatSegment<SQLImpl> implements SQLOperations, Pre
         }
 
         @Override
+        @NonNull
         public Flux<T> all() {
             return SHARED_REACTIVE_OPERATIONS.select(entity);
         }
 
+        /**
+         * 忽略查询字段，查询数量
+         *
+         * @return 按当前sql执行户的条数
+         */
         @Override
-        public Mono<DataPage<T>> page() {
-            return SHARED_REACTIVE_OPERATIONS.selectPage(entity);
+        public Mono<Integer> count() {
+            try {
+                counting.set(true);
+                return SHARED_REACTIVE_OPERATIONS.selectOne(BoundSQLEntity.of(entityRef, Integer.class));
+            } finally {
+                counting.set(false);
+            }
+        }
+
+        /**
+         * 分页查询
+         *
+         * @param page 分页对象
+         * @return 返回的分页对象
+         */
+        @Override
+        @NonNull
+        public Mono<DataPage<T>> page(DataPage<T> page) {
+            return count().flatMapMany(count -> {
+                        page.setTotal(count);
+                        return SHARED_REACTIVE_OPERATIONS.select(entity.paged(page));
+                    })
+                    .collectList()
+                    .map(list -> {
+                        page.setList(list);
+                        return page;
+                    });
         }
 
         @Override

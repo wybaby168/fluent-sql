@@ -11,6 +11,7 @@ import org.springframework.util.ObjectUtils;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Objects;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -75,7 +76,9 @@ public class UpdateImpl implements Update {
      */
     @Override
     public String get() {
-        return segments.stream().map(SQLSegment::get).collect(Collectors.joining(", "));
+        return segments.stream().map(SQLSegment::get)
+                .filter(Objects::nonNull)
+                .collect(Collectors.joining(", "));
     }
 
     /**
@@ -104,7 +107,9 @@ public class UpdateImpl implements Update {
          */
         @Override
         public String get() {
-            return this.segments.stream().map(SQLSegment::get).collect(Collectors.joining(" "));
+            return this.segments.stream().map(SQLSegment::get)
+                    .filter(Objects::nonNull)
+                    .collect(Collectors.joining(" "));
         }
     }
 }

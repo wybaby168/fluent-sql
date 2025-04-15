@@ -8,6 +8,7 @@ import org.springframework.util.CollectionUtils;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 import static group.flyfish.fluent.query.ConcatCandidate.AND;
@@ -28,7 +29,9 @@ class SimpleQuery extends ConcatSegment<SimpleQuery> implements Query {
      */
     @Override
     public String get() {
-        return segments.stream().map(SQLSegment::get).collect(Collectors.joining(" "));
+        return segments.stream().map(SQLSegment::get)
+                .filter(Objects::nonNull)
+                .collect(Collectors.joining(" "));
     }
 
     /**

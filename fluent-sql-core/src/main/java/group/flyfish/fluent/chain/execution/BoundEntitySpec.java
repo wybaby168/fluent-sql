@@ -32,12 +32,19 @@ public interface BoundEntitySpec<T> {
     List<T> all();
 
     /**
+     * 忽略查询字段，查询当前条件下的数量
+     *
+     * @return 数量
+     */
+    int count();
+
+    /**
      * 分页查询
      *
      * @return 返回的分页对象
      */
     @NonNull
-    DataPage<T> page();
+    DataPage<T> page(DataPage<T> page);
 
     /**
      * 直接执行sql，根据update count返回更新行数，如果是查询，永远返回0
