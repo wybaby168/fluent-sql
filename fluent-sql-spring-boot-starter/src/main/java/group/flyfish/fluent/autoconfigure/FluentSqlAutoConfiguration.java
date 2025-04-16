@@ -6,13 +6,14 @@ import group.flyfish.fluent.operations.FluentSQLOperations;
 import group.flyfish.fluent.operations.JdbcTemplateFluentSQLOperations;
 import group.flyfish.fluent.operations.R2dbcFluentSQLOperations;
 import group.flyfish.fluent.operations.ReactiveFluentSQLOperations;
-import org.springframework.boot.autoconfigure.AutoConfigureAfter;
+import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
 import org.springframework.boot.autoconfigure.r2dbc.R2dbcAutoConfiguration;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.r2dbc.core.DatabaseClient;
@@ -25,10 +26,11 @@ import javax.sql.DataSource;
  * @author wangyu
  */
 @Import({R2dbcFluentSqlAutoConfigure.class, JdbcFluentSqlAutoConfigure.class})
+@AutoConfiguration(after = {R2dbcAutoConfiguration.class, DataSourceAutoConfiguration.class})
 public class FluentSqlAutoConfiguration {
 
     @ConditionalOnClass(DatabaseClient.class)
-    @AutoConfigureAfter(R2dbcAutoConfiguration.class)
+    @Configuration
     static class R2dbcFluentSqlAutoConfigure {
 
         /**
@@ -45,7 +47,7 @@ public class FluentSqlAutoConfiguration {
     }
 
     @ConditionalOnClass(DataSource.class)
-    @AutoConfigureAfter(DataSourceAutoConfiguration.class)
+    @Configuration
     static class JdbcFluentSqlAutoConfigure {
 
         /**
@@ -54,8 +56,8 @@ public class FluentSqlAutoConfiguration {
          * @param dataSource 从spring datasource注入
          */
         @Bean
-        @ConditionalOnMissingBean(FluentSQLOperations.class)
         @ConditionalOnBean(DataSource.class)
+        @ConditionalOnMissingBean(FluentSQLOperations.class)
         public FluentSQLOperations fluentSQLOperations(DataSource dataSource) {
             return new JdbcTemplateFluentSQLOperations(new JdbcTemplate(dataSource));
         }
