@@ -33,7 +33,7 @@ public class BoundSQLEntity<T> implements Supplier<String> {
 
     public BoundSQLEntity<T> paged(DataPage<T> page) {
         BoundSQLEntity<T> cloned = new BoundSQLEntity<>(entity, resultType);
-        cloned.lastSql = () -> MessageFormat.format("LIMIT {0} OFFSET {1}", page.getSize(), (page.getPage() - 1) * page.getSize());
+        cloned.lastSql = () -> MessageFormat.format("LIMIT {0} OFFSET {1}", page.getSize(), page.getPage() * page.getSize());
         return cloned;
     }
 
