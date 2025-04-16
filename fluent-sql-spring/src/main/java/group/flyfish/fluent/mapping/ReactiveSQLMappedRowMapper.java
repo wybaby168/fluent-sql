@@ -7,6 +7,8 @@ import org.springframework.dao.DataRetrievalFailureException;
 
 import java.util.function.BiFunction;
 
+import static group.flyfish.fluent.utils.sql.SqlNameUtils.cast;
+
 /**
  * 异步支持的sql映射，支持json映射
  *
@@ -47,12 +49,20 @@ public class ReactiveSQLMappedRowMapper<T> implements BiFunction<Row, RowMetadat
      */
     @Override
     public T apply(Row row, RowMetadata rowMetadata) {
+        if (descriptor.isPrimitive()) {
+            for (ColumnMetadata metadata : rowMetadata.getColumnMetadatas()) {
+                String column = metadata.getName();
+                return cast(R2dbcUtils.getRowValue(row, column, descriptor.getMappedClass()));
+            }
+            return null;
+        }
+
         MappingBean<T> bean = descriptor.create();
 
         for (ColumnMetadata metadata : rowMetadata.getColumnMetadatas()) {
             String column = metadata.getName();
             try {
-                bean.setValue(column, type -> row.get(column, type));
+                bean.setValue(column, type -> R2dbcUtils.getRowValue(row, column, type));
             } catch (Exception ex) {
                 throw new DataRetrievalFailureException(
                         "Unable to map column '" + column + "' to property '" + bean.getProperty(column) + "'", ex);

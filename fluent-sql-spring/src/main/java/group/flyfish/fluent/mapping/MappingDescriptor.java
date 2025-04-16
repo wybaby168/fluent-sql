@@ -11,6 +11,7 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.core.annotation.MergedAnnotations;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.util.Assert;
+import org.springframework.util.ClassUtils;
 import org.springframework.util.ReflectionUtils;
 import org.springframework.util.StringUtils;
 
@@ -88,6 +89,10 @@ class MappingDescriptor<T> {
         bean.setTransformer(this::convertPropertyIfNeed);
         bean.setPropertyTransformer(this::lowerCaseName);
         return bean;
+    }
+
+    boolean isPrimitive() {
+        return ClassUtils.isPrimitiveOrWrapper(mappedClass);
     }
 
     /**

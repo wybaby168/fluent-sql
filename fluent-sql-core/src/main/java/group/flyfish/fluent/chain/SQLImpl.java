@@ -83,7 +83,6 @@ final class SQLImpl extends ConcatSegment<SQLImpl> implements SQLOperations, Pre
         SHARED_OPERATIONS = operations;
     }
 
-
     /**
      * 绑定实现类
      *
@@ -172,6 +171,7 @@ final class SQLImpl extends ConcatSegment<SQLImpl> implements SQLOperations, Pre
         // 判断渲染模式
         if (counting.get()) {
             // 设置后立即回正
+            counting.set(false);
             return "COUNT(1)";
         }
         if (selections.isEmpty()) {
@@ -380,13 +380,9 @@ final class SQLImpl extends ConcatSegment<SQLImpl> implements SQLOperations, Pre
          */
         @Override
         public int count() {
-            try {
-                counting.set(true);
-                Integer result = SHARED_OPERATIONS.selectOne(BoundSQLEntity.of(entityRef, Integer.class));
-                return null == result ? 0 : result;
-            } finally {
-                counting.set(false);
-            }
+            counting.set(true);
+            Integer result = SHARED_OPERATIONS.selectOne(BoundSQLEntity.of(entityRef, Integer.class));
+            return null == result ? 0 : result;
         }
 
         @Override
@@ -437,12 +433,8 @@ final class SQLImpl extends ConcatSegment<SQLImpl> implements SQLOperations, Pre
          */
         @Override
         public Mono<Integer> count() {
-            try {
-                counting.set(true);
-                return SHARED_REACTIVE_OPERATIONS.selectOne(BoundSQLEntity.of(entityRef, Integer.class));
-            } finally {
-                counting.set(false);
-            }
+            counting.set(true);
+            return SHARED_REACTIVE_OPERATIONS.selectOne(BoundSQLEntity.of(entityRef, Integer.class));
         }
 
         /**

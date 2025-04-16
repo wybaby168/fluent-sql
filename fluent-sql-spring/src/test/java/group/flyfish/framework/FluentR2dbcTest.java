@@ -1,6 +1,10 @@
 package group.flyfish.framework;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import group.flyfish.fluent.chain.select.FetchSqlChain;
+import group.flyfish.fluent.debug.FluentSqlDebugger;
+import group.flyfish.fluent.entity.DataPage;
 import group.flyfish.fluent.operations.R2dbcFluentSQLOperations;
 import group.flyfish.framework.entity.SaasOrder;
 import group.flyfish.framework.entity.SaasPlan;
@@ -20,7 +24,21 @@ import static group.flyfish.fluent.query.Query.where;
 
 public class FluentR2dbcTest {
 
-    private FetchSqlChain sql;
+    private final ObjectMapper objectMapper = new ObjectMapper();
+
+    private FetchSqlChain getSql() {
+        return select(
+                // 查询租户全量字段
+                composite(SaasTenant::getId, SaasTenant::getName, SaasTenant::getIdentifier, SaasTenant::getDatasource,
+                        SaasTenant::getStorage, SaasTenant::getStatus, SaasTenant::getEnable),
+                // 查询套餐
+                composite(SaasOrder::getQuotaConfig, SaasOrder::getOrderTime, SaasOrder::getExpireTime,
+                        SaasOrder::getOrderType))
+                .from(SaasTenant.class)
+                .leftJoin(SaasOrder.class).on(where(SaasOrder::getTenantId).eq(SaasTenant::getId))
+                .leftJoin(SaasPlan.class).on(where(SaasPlan::getId).eq(SaasOrder::getPlanId))
+                .matching(where(SaasTenant::getEnable).eq(true));
+    }
 
     /**
      * 静态测试demo
@@ -30,6 +48,8 @@ public class FluentR2dbcTest {
      */
     @Test
     public void testSql() {
+        FluentSqlDebugger.enable();
+
         MySqlConnectionConfiguration configuration = MySqlConnectionConfiguration.builder()
                 .host("localhost")
                 .port(3306)
@@ -43,20 +63,26 @@ public class FluentR2dbcTest {
         new R2dbcFluentSQLOperations(databaseClient);
 
         // 缓存构建结果
-        this.sql = select(
-                // 查询租户全量字段
-                composite(SaasTenant::getId, SaasTenant::getName, SaasTenant::getIdentifier, SaasTenant::getDatasource,
-                        SaasTenant::getStorage, SaasTenant::getStatus, SaasTenant::getEnable),
-                // 查询套餐
-                composite(SaasOrder::getQuotaConfig, SaasOrder::getOrderTime, SaasOrder::getExpireTime,
-                        SaasOrder::getOrderType))
-                .from(SaasTenant.class)
-                .leftJoin(SaasOrder.class).on(where(SaasOrder::getTenantId).eq(SaasTenant::getId))
-                .leftJoin(SaasPlan.class).on(where(SaasPlan::getId).eq(SaasOrder::getPlanId))
-                .matching(where(SaasTenant::getEnable).eq(true));
-
-        System.out.println(sql.as(TenantContext.class).reactive().all()
+        getSql().as(TenantContext.class)
+                .reactive()
+                .all()
                 .collectList()
-                .block());
+                .doOnNext(this::printObject)
+                .block();
+
+        // 测试分页
+        getSql().as(TenantContext.class)
+                .reactive()
+                .page(DataPage.of(1, 10))
+                .doOnNext(this::printObject)
+                .block();
+    }
+
+    private void printObject(Object object) {
+        try {
+            System.out.println(objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(object));
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
     }
 }
