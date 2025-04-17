@@ -9,9 +9,10 @@ import org.springframework.util.ReflectionUtils;
 import org.springframework.util.StringUtils;
 
 import javax.persistence.Column;
-import javax.persistence.Table;
+import javax.persistence.Transient;
 import java.lang.ref.WeakReference;
 import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -30,6 +31,7 @@ public final class EntityNameUtils {
 
     private static final String JPA_TABLE = "javax.persistence.Table";
     private static final String SPRING_DATA_TABLE = "org.springframework.data.relational.core.mapping.Table";
+    private static final String TRANSIENT_ANNOTATION = "org.springframework.data.annotation.Transient";
 
     // SerializedLambda 反序列化缓存
     private static final Map<String, WeakReference<SerializedLambda>> FUNC_CACHE = new ConcurrentHashMap<>();
@@ -95,10 +97,11 @@ public final class EntityNameUtils {
         AliasComposite.AliasCache cache = AliasComposite.sharedCache();
         // 确定最终名称
         String finalName = cache.has(func) ? cache.get(func) : property;
-        if (cache.has(beanClass)) {
-            return cache.get(beanClass) + "." + handler.apply(column, finalName);
-        }
-        return handler.apply(column, finalName);
+        // 交由处理器处理
+        String handled = handler.apply(column, finalName);
+        // 返回完全限定名
+        return cache.computeIfPresent(beanClass, name -> name + "." + handled)
+                .orElse(handled);
     }
 
 
@@ -142,8 +145,21 @@ public final class EntityNameUtils {
      */
     private static Map<String, String> buildFieldsCache(Class<?> type) {
         Map<String, String> fields = new HashMap<>();
-        ReflectionUtils.doWithFields(type, field -> fields.put(field.getName(), resolveFinalName(field)));
+        ReflectionUtils.doWithFields(type, field -> fields.put(field.getName(), resolveFinalName(field)),
+                EntityNameUtils::isField);
         return fields;
+    }
+
+    private static boolean isField(Field field) {
+        int modifiers = field.getModifiers();
+        if (Modifier.isStatic(modifiers) || Modifier.isFinal(modifiers) || Modifier.isTransient(modifiers) || field.isAnnotationPresent(Transient.class)) {
+            return false;
+        }
+        MergedAnnotations annotations = MergedAnnotations.from(field);
+        if (annotations.isPresent(TRANSIENT_ANNOTATION)) {
+            return false;
+        }
+        return true;
     }
 
     /**

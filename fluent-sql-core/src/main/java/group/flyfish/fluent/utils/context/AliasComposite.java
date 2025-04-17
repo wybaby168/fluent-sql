@@ -5,8 +5,10 @@ import org.springframework.lang.Nullable;
 import org.springframework.util.StringUtils;
 
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Function;
 
 /**
  * 别名管理器
@@ -101,7 +103,7 @@ public final class AliasComposite {
     public static class AliasCache {
 
         // 表别名缓存map
-        private final Map<Class<?>, String> instance = new ConcurrentHashMap<>();
+        private final Map<String, String> instance = new ConcurrentHashMap<>();
 
         // 表别名内置计数
         private final AtomicInteger counter = new AtomicInteger(0);
@@ -120,7 +122,7 @@ public final class AliasComposite {
          */
         public String add(Class<?> key, @Nullable String alias) {
             if (StringUtils.hasText(alias)) {
-                instance.put(key, alias);
+                instance.put(key.getName(), alias);
                 return alias;
             } else {
                 return get(key);
@@ -128,11 +130,18 @@ public final class AliasComposite {
         }
 
         public boolean has(Class<?> key) {
-            return instance.containsKey(key);
+            return instance.containsKey(key.getName());
         }
 
         public String get(Class<?> key) {
-            return instance.computeIfAbsent(key, this::generate);
+            return instance.computeIfAbsent(key.getName(), this::generate);
+        }
+
+        public Optional<String> computeIfPresent(Class<?> key, Function<String, String> computer) {
+            if (has(key)) {
+                return Optional.ofNullable(computer.apply(get(key)));
+            }
+            return Optional.empty();
         }
 
         /**
@@ -141,7 +150,7 @@ public final class AliasComposite {
          * @param key 类型key
          * @return 生成的key
          */
-        public String generate(Class<?> key) {
+        public String generate(String key) {
             return PREFIX + counter.incrementAndGet();
         }
 
