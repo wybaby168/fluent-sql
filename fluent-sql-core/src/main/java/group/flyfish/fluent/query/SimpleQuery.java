@@ -59,6 +59,16 @@ class SimpleQuery extends ConcatSegment<SimpleQuery> implements Query {
         return new SimpleCondition(getter, this::and);
     }
 
+    /** 以且连接下一个条件（字符串列名）
+     * 
+     * @param column 列名
+     * @return 构建操作
+     */
+    @Override
+    public Condition and(String column) {
+        return new StringCondition(column, this::and);
+    }
+
     /**
      * 直接连接其他条件
      *
@@ -98,6 +108,17 @@ class SimpleQuery extends ConcatSegment<SimpleQuery> implements Query {
     @Override
     public <T> Condition or(SFunction<T, ?> getter) {
         return new SimpleCondition(getter, this::or);
+    }
+
+    /**
+     * 以或连接下一个条件（字符串列名）
+     * 
+     * @param column 列名
+     * @return 构建操作
+     */
+    @Override
+    public Condition or(String column) {
+        return new StringCondition(column, this::or);
     }
 
     /**

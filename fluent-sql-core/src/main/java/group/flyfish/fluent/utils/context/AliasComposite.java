@@ -34,6 +34,16 @@ public final class AliasComposite {
     }
 
     /**
+     * 添加别名（字符串表名）
+     *
+     * @param key   表名（未加反引号的原始名）
+     * @param alias 别名
+     */
+    public static String add(String key, String alias) {
+        return sharedCache().add(key, alias);
+    }
+
+    /**
      * 添加别名
      *
      * @param key   别名key
@@ -55,6 +65,16 @@ public final class AliasComposite {
     }
 
     /**
+     * 判断字符串表名是否有别名
+     *
+     * @param key 表名
+     * @return 是否存在
+     */
+    public static boolean has(String key) {
+        return sharedCache().has(key);
+    }
+
+    /**
      * 判断表是否有别名
      *
      * @param key 实体类
@@ -72,6 +92,35 @@ public final class AliasComposite {
      */
     public static String get(Class<?> key) {
         return sharedCache().get(key);
+    }
+
+    /**
+     * 获取字符串表名的别名
+     *
+     * @param key 表名
+     * @return 结果
+     */
+    public static String get(String key) {
+        return sharedCache().get(key);
+    }
+
+    /**
+     * 当且仅当存在单一表别名时，返回该唯一别名
+     *
+     * @return 单一别名
+     */
+    public static Optional<String> singleAlias() {
+        return sharedCache().singleAlias();
+    }
+
+    /**
+     * 尝试根据表名查找别名
+     *
+     * @param table 表名（未加反引号）
+     * @return 可能的别名
+     */
+    public static Optional<String> findAliasByTable(String table) {
+        return sharedCache().findAliasByTable(table);
     }
 
     /**
@@ -129,15 +178,39 @@ public final class AliasComposite {
             }
         }
 
+        public String add(String key, @Nullable String alias) {
+            if (StringUtils.hasText(alias)) {
+                instance.put(key, alias);
+                return alias;
+            } else {
+                return get(key);
+            }
+        }
+
         public boolean has(Class<?> key) {
             return instance.containsKey(key.getName());
+        }
+
+        public boolean has(String key) {
+            return instance.containsKey(key);
         }
 
         public String get(Class<?> key) {
             return instance.computeIfAbsent(key.getName(), this::generate);
         }
 
+        public String get(String key) {
+            return instance.computeIfAbsent(key, this::generate);
+        }
+
         public Optional<String> computeIfPresent(Class<?> key, Function<String, String> computer) {
+            if (has(key)) {
+                return Optional.ofNullable(computer.apply(get(key)));
+            }
+            return Optional.empty();
+        }
+
+        public Optional<String> computeIfPresent(String key, Function<String, String> computer) {
             if (has(key)) {
                 return Optional.ofNullable(computer.apply(get(key)));
             }
@@ -152,6 +225,17 @@ public final class AliasComposite {
          */
         public String generate(String key) {
             return PREFIX + counter.incrementAndGet();
+        }
+
+        public Optional<String> singleAlias() {
+            if (instance.size() == 1) {
+                return instance.values().stream().findFirst();
+            }
+            return Optional.empty();
+        }
+
+        public Optional<String> findAliasByTable(String table) {
+            return Optional.ofNullable(instance.get(table));
         }
 
         /**

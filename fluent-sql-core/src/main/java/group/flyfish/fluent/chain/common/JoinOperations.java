@@ -20,6 +20,16 @@ public interface JoinOperations {
     AfterJoinSqlChain join(JoinCandidate type, Class<?> clazz, String alias);
 
     /**
+     * 全量的join连接支持（字符串表名）
+     *
+     * @param type  连接类型
+     * @param table 目标表名
+     * @param alias 别名
+     * @return join后的操作
+     */
+    AfterJoinSqlChain join(JoinCandidate type, String table, String alias);
+
+    /**
      * 使用内连接连接其他表
      *
      * @param clazz 其他表实体
@@ -38,6 +48,27 @@ public interface JoinOperations {
      */
     default AfterJoinSqlChain join(Class<?> clazz, String alias) {
         return join(JoinCandidate.INNER_JOIN, clazz, alias);
+    }
+
+    /**
+     * 使用内连接连接其他表（字符串表名）
+     *
+     * @param table 其他表名
+     * @return join后的操作
+     */
+    default AfterJoinSqlChain join(String table) {
+        return join(JoinCandidate.INNER_JOIN, table, null);
+    }
+
+    /**
+     * 使用内连接连接其他表（字符串表名）
+     *
+     * @param table 其他表名
+     * @param alias 别名
+     * @return join后的操作
+     */
+    default AfterJoinSqlChain join(String table, String alias) {
+        return join(JoinCandidate.INNER_JOIN, table, alias);
     }
 
     /**
@@ -62,6 +93,27 @@ public interface JoinOperations {
     }
 
     /**
+     * 使用左连接连接其他表（字符串表名）
+     *
+     * @param table 其他表名
+     * @return join后的操作
+     */
+    default AfterJoinSqlChain leftJoin(String table) {
+        return join(JoinCandidate.LEFT_JOIN, table, null);
+    }
+
+    /**
+     * 使用左连接连接其他表（字符串表名）
+     *
+     * @param table 其他表名
+     * @param alias 别名
+     * @return join后的操作
+     */
+    default AfterJoinSqlChain leftJoin(String table, String alias) {
+        return join(JoinCandidate.LEFT_JOIN, table, alias);
+    }
+
+    /**
      * 使用内连接连接其他表
      *
      * @param clazz 其他表实体
@@ -80,5 +132,26 @@ public interface JoinOperations {
      */
     default AfterJoinSqlChain rightJoin(Class<?> clazz, String alias) {
         return join(JoinCandidate.RIGHT_JOIN, clazz, alias);
+    }
+
+    /**
+     * 使用右连接连接其他表（字符串表名）
+     *
+     * @param table 其他表名
+     * @return join后的操作
+     */
+    default AfterJoinSqlChain rightJoin(String table) {
+        return join(JoinCandidate.RIGHT_JOIN, table, null);
+    }
+
+    /**
+     * 使用右连接连接其他表（字符串表名）
+     *
+     * @param table 其他表名
+     * @param alias 别名
+     * @return join后的操作
+     */
+    default AfterJoinSqlChain rightJoin(String table, String alias) {
+        return join(JoinCandidate.RIGHT_JOIN, table, alias);
     }
 }

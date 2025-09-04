@@ -6,6 +6,7 @@ import group.flyfish.fluent.operations.FluentSQLOperations;
 import group.flyfish.fluent.operations.JdbcTemplateFluentSQLOperations;
 import group.flyfish.framework.cases.FluentSqlTestCase;
 import group.flyfish.framework.cases.JdbcTestCase;
+import group.flyfish.framework.cases.MixedStringAndObjectTablesTestCase;
 import group.flyfish.framework.cases.MybatisTestCase;
 import group.flyfish.framework.cases.SingleTableTestCase;
 import org.junit.Test;
@@ -48,7 +49,9 @@ public class FluentJdbcTest {
                 // FluentSQL测试
                 new FluentSqlTestCase(dataSource),
                 // 单表测试
-                new SingleTableTestCase()
+                new SingleTableTestCase(),
+                // 混合字符串与对象表名测试
+                new MixedStringAndObjectTablesTestCase(dataSource)
         );
         // 执行测试
         cases.forEach(TestCase::test);

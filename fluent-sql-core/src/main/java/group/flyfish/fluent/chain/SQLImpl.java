@@ -42,6 +42,7 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import static group.flyfish.fluent.utils.cache.CachedWrapper.wrap;
+import java.util.Map;
 
 /**
  * 查询工具类
@@ -144,6 +145,16 @@ final class SQLImpl extends ConcatSegment<SQLImpl> implements SQLOperations, Pre
     }
 
     /**
+     * 从字符串表查询
+     *
+     * @param table 表名
+     * @return 链式调用
+     */
+    public HandleSqlChain from(String table) {
+        return from(table, null);
+    }
+
+    /**
      * 从指定表查询，附加别名
      * 该接口适用于同一张表多次from的情况，可以从自表进行多次查询
      * 大部分情况下，您都不需要指定别名
@@ -161,6 +172,24 @@ final class SQLImpl extends ConcatSegment<SQLImpl> implements SQLOperations, Pre
                 .concat(this::applySelections)
                 .concat("FROM")
                 .concat(() -> EntityNameUtils.getTableName(type))
+                .concat(() -> SqlNameUtils.wrap(this.ctx(key)));
+    }
+
+    /**
+     * 从字符串表查询，附加别名
+     *
+     * @param table 表名（未包裹反引号）
+     * @param alias 别名
+     * @return 处理环节
+     */
+    public HandleSqlChain from(String table, String alias) {
+        this.primaryClass = Map.class; // 对于字符串表，结果映射通常需要 as(Class) 指定
+        String key = table;
+        return this
+                .ctxPut(ctx -> ctx.put(key, AliasComposite.add(table, alias)))
+                .concat(this::applySelections)
+                .concat("FROM")
+                .concat(() -> SqlNameUtils.wrap(table))
                 .concat(() -> SqlNameUtils.wrap(this.ctx(key)));
     }
 
@@ -197,6 +226,15 @@ final class SQLImpl extends ConcatSegment<SQLImpl> implements SQLOperations, Pre
         return ctxPut(ctx -> ctx.put(key, AliasComposite.add(clazz, alias)))
                 .concat(type)
                 .concat(() -> EntityNameUtils.getTableName(clazz))
+                .concat(() -> SqlNameUtils.wrap(ctx(key)));
+    }
+
+    @Override
+    public AfterJoinSqlChain join(JoinCandidate type, String table, String alias) {
+        String key = table;
+        return ctxPut(ctx -> ctx.put(key, AliasComposite.add(table, alias)))
+                .concat(type)
+                .concat(() -> SqlNameUtils.wrap(table))
                 .concat(() -> SqlNameUtils.wrap(ctx(key)));
     }
 
