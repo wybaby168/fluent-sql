@@ -2,7 +2,6 @@ package group.flyfish.fluent.chain;
 
 import group.flyfish.fluent.chain.common.PreSqlChain;
 import group.flyfish.fluent.update.Update;
-import group.flyfish.fluent.utils.sql.SFunction;
 
 /**
  * SQL操作
@@ -10,14 +9,13 @@ import group.flyfish.fluent.utils.sql.SFunction;
 public interface SQLOperations {
 
     /**
-     * 查询起手
+     * 查询起手（表达式/聚合）
+     * 只能和使用字段起手的写法二选一
      *
-     * @param fields 字段列表，不传代表所有字段
-     * @param <T>    实体泛型
+     * @param segments 表达式/聚合
      * @return 预查询链
      */
-    @SuppressWarnings("unchecked")
-    <T> PreSqlChain select(SFunction<T, ?>... fields);
+    PreSqlChain select(SQLSegment... segments);
 
     /**
      * 更新起手

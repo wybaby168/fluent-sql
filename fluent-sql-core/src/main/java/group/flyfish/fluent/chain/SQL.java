@@ -1,13 +1,17 @@
 package group.flyfish.fluent.chain;
 
 import group.flyfish.fluent.chain.common.PreSqlChain;
-import group.flyfish.fluent.chain.select.SelectComposite;
 import group.flyfish.fluent.operations.FluentSQLOperations;
 import group.flyfish.fluent.operations.ReactiveFluentSQLOperations;
 import group.flyfish.fluent.update.Update;
 import group.flyfish.fluent.utils.sql.SFunction;
 
-import static group.flyfish.fluent.utils.sql.SqlNameUtils.cast;
+import java.util.Arrays;
+import java.util.Objects;
+
+import static group.flyfish.fluent.chain.select.SelectComposite.composite;
+
+;
 
 /**
  * 链式查询入口
@@ -23,16 +27,14 @@ public interface SQL {
      */
     @SafeVarargs
     static <T> PreSqlChain select(SFunction<T, ?>... fields) {
-        return SQLFactory.produce().select(fields);
+        return SQLFactory.produce().select(composite(fields));
     }
 
     /**
-     * 查询起手式
-     *
-     * @return 自身
+     * 查询起手式（表达式/聚合）
      */
-    static PreSqlChain select(SelectComposite<?>... composites) {
-        return SQLFactory.produce().select(SelectComposite.combine(composites));
+    static PreSqlChain select(SQLSegment... segments) {
+        return SQLFactory.produce().select(segments);
     }
 
     /**
@@ -41,7 +43,7 @@ public interface SQL {
      * @return 结果
      */
     static PreSqlChain select() {
-        return SQLFactory.produce().select(cast(new SFunction[]{}));
+        return SQLFactory.produce().select();
     }
 
     /**

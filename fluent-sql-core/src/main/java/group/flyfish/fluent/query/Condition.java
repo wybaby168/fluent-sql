@@ -44,4 +44,49 @@ public interface Condition extends Parameterized, SQLSegment {
      * @return 查询链
      */
     Query in(Collection<?> collection);
+
+    /**
+     * 大于
+     * @param value 值
+     * @return 查询链
+     */
+    Query gt(Object value);
+
+    /**
+     * 大于等于
+     * 
+     * @param value 值
+     * @return 查询链
+     */
+    Query gte(Object value);
+
+    /**
+     * 小于
+     * 
+     * @param value 值
+     * @return 查询链
+     */
+    Query lt(Object value);
+
+    /**
+     * 小于等于
+     * 
+     * @param value 值
+     * @return 查询链
+     */
+    Query lte(Object value);
+
+    /**
+     * 非空
+     * 
+     * @return 查询链
+     */
+    Query notNull();
+
+    /**
+     * 为空
+     * 
+     * @return 查询链
+     */
+    Query isNull();
 }

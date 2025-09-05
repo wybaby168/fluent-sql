@@ -1,12 +1,12 @@
 package group.flyfish.fluent.chain.select;
 
+import group.flyfish.fluent.chain.SQLSegment;
 import group.flyfish.fluent.utils.context.AliasComposite;
 import group.flyfish.fluent.utils.sql.EntityNameUtils;
 import group.flyfish.fluent.utils.sql.SFunction;
-import group.flyfish.fluent.utils.sql.SqlNameUtils;
 
 import java.util.Arrays;
-import java.util.stream.Stream;
+import java.util.stream.Collectors;
 
 /**
  * 选择语句泛型包装
@@ -14,7 +14,8 @@ import java.util.stream.Stream;
  * @author wangyu
  */
 @FunctionalInterface
-public interface SelectComposite<T> {
+@SuppressWarnings("unchecked")
+public interface SelectComposite extends SQLSegment {
 
     /**
      * 基于泛型的包装，以实体类为T，可以组合任意字段集合
@@ -24,8 +25,20 @@ public interface SelectComposite<T> {
      * @return 包装集合
      */
     @SafeVarargs
-    static <T> SelectComposite<T> composite(SFunction<T, Object>... getter) {
-        return () -> Arrays.stream(getter);
+    static <T> SelectComposite composite(SFunction<T, ?>... getter) {
+        return () -> columns(getter);
+    }
+
+    /**
+     * 基于泛型的包装，以实体类为T，可以组合任意字段集合，返回字段名称
+     *
+     * @param <T>    实体泛型
+     * @param getter 字段属性getter
+     * @return 包装集合
+     */
+    @SafeVarargs
+    static <T> SelectComposite names(SFunction<T, ?>... getter) {
+        return () -> Arrays.stream(getter).map(SFunction::getName).collect(Collectors.joining(","));
     }
 
     /**
@@ -36,20 +49,9 @@ public interface SelectComposite<T> {
      * @param <T>    实体泛型
      * @return 包装集合
      */
-    static <T> SelectComposite<T> composite(SFunction<T, Object> getter, String alias) {
+    static <T> SelectComposite composite(SFunction<T, ?> getter, String alias) {
         AliasComposite.add(getter, alias);
-        return () -> Stream.of(getter);
-    }
-
-    /**
-     * 组合多个组合条件，并进行解包，忽略泛型
-     *
-     * @param composites 多个包
-     * @param <T>        泛型，任意返回
-     * @return 扁平化的字段列表
-     */
-    static <T> T combine(SelectComposite<?>... composites) {
-        return SqlNameUtils.cast(Arrays.stream(composites).flatMap(SelectComposite::stream).toArray(SFunction[]::new));
+        return () -> columns(getter);
     }
 
     /**
@@ -59,15 +61,20 @@ public interface SelectComposite<T> {
      * @param <T>   实体类泛型
      * @return 字段集合
      */
-    static <T> SelectComposite<T> all(Class<T> clazz) {
-        return () -> EntityNameUtils.getFields(clazz).entrySet().stream()
-                .map(entry -> new SFunction.StaticRef<>(clazz, entry.getKey(), entry.getValue()));
+    static <T> SelectComposite all(Class<T> clazz) {
+        return () -> columns(EntityNameUtils.getFields(clazz).entrySet().stream()
+                .map(entry -> new SFunction.StaticRef<>(clazz, entry.getKey(), entry.getValue()))
+                .toArray(SFunction[]::new));
     }
 
     /**
-     * 返回stream
+     * 拼接多个getter
      *
-     * @return 结果流对象
+     * @param <T>     实体泛型
+     * @param getters 多个getter
+     * @return 拼接后的字段列表
      */
-    Stream<SFunction<T, Object>> stream();
+    private static <T> String columns(SFunction<T, ?>... getters) {
+        return Arrays.stream(getters).map(SFunction::get).collect(Collectors.joining(","));
+    }
 }

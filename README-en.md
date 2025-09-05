@@ -32,6 +32,18 @@ Fluent SQL is an SQL builder based on the Fluent API design pattern, offering an
 6. **Intelligent Alias Strategy:** Simplifies query writing by automatically managing aliases across multiple tables, making your code more concise and readable while providing a seamless Java-to-SQL experience.
 7. **Precise API Control:** Offers fine-grained control over SQL construction, ensuring each API call seamlessly guides you through the process while preventing errors.
 
+## What's New
+
+- Support mixing string table names and class references in from/join
+  - Example: `.from(SaasTenant.class).leftJoin("saas_order", "o").on(where("o.tenant_id").eq(SaasTenant::getId))`
+  - Also supported: `.from("saas_tenant","t").join(SaasOrder.class,"o")`
+- Conditions support string column names, mixed with class field references
+  - Example: `where("o.order_type").in(List.of(1,2,3))`
+- Aggregation helpers for use inside `select(...)`
+  - Example: `select(Aggregation.count("o.id"))`, `select(Aggregation.avg(SaasOrder::getAmount))`
+- Grouping and aggregation filtering
+  - Example: `.groupBy(SaasTenant::getId, SaasTenant::getName).having(where("COUNT(o.id)").gt(0))`
+
 ## Quick Start Guide
 
 ### Spring Boot Integration
@@ -169,25 +181,48 @@ Using static imports is recommended for cleaner code:
 3. `SelectComposite.all` => `all`
 4. `Order.by` => `by`
 5. `Query.where` => `where`
+6. `Aggregation.*` => `count/sum/max/min/avg` (aggregation helpers)
 
-For demonstration purposes, the following code snippets assume static imports:
-
-1. Bind your data source for SQL execution:
+### String table names with aliases (suitable for many-to-many / link tables)
 
 ```java
-class SQLConfig {
+import static group.flyfish.fluent.chain.SQL.select;
+import static group.flyfish.fluent.chain.select.SelectComposite.composite;
+import static group.flyfish.fluent.query.Query.where;
 
-    void doConfig() {
-        // Create or obtain your data source
-        DataSource dataSource = createDataSource(...);
-        // Instantiate based on Spring JDBC template
-        SQL.bind(new JdbcTemplate(dataSource));
-    }
-}
+var sql = select(
+        composite(SaasTenant::getId, SaasTenant::getName)
+)
+.from(SaasTenant.class)
+.leftJoin("saas_order", "o").on(
+        where("o.tenant_id").eq(SaasTenant::getId)
+)
+.leftJoin("saas_plan", "p").on(
+        where("p.id").eq(SaasOrder::getPlanId)
+)
+.matching(
+        where(SaasTenant::getEnable).eq(true)
+                .and("o.order_type").in(List.of(1, 2, 3))
+);
+
+List<TenantContext> list = sql.as(TenantContext.class).block().all();
 ```
 
-2. Create a result object VO to receive the execution results, such as `TenantContext` in the Quick Start.
-3. Write SQL using Java syntax and then call `.one()` or `.list()` to retrieve a single or multiple results.
-4. To query all fields from a single table, use `select().from(TableClass.class)`.
-5. To query all fields from a specific table in a multi-table join, use `select(all(TableClass.class)).from(TableClass.class).join(Other.class).then()`.
-6. To query specific fields from multiple tables with aliases, refer to: `select(composite(TableA::getName, "nameA"), composite(TableB::getName, "nameB")).from(TableA.class).join(TableB.class)...`. 
+### Aggregation and Grouping
+
+```java
+import static group.flyfish.fluent.chain.SQL.select;
+import static group.flyfish.fluent.chain.select.SelectComposite.composite;
+import static group.flyfish.fluent.query.Query.where;
+import static group.flyfish.fluent.utils.sql.Aggregation.*;
+
+var sql = select(
+        composite(SaasTenant::getId, SaasTenant::getName),
+        count("o.id")
+)
+.from(SaasTenant.class)
+.leftJoin("saas_order", "o").on(where("o.tenant_id").eq(SaasTenant::getId))
+.matching(where(SaasTenant::getEnable).eq(true))
+.groupBy(SaasTenant::getId, SaasTenant::getName)
+.having(where("COUNT(o.id)").gt(0));
+``` 

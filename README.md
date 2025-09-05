@@ -34,6 +34,17 @@
 6. 智能别名策略，写查询再也不用担心多张表的别名问题，代码简介易懂，用java跟sql体验直接拉满
 7. 高精度api控制，sql构建每个步骤严格把关，保证输入一个api立即能写出来接下来的步骤还不出错
 
+## 新增能力
+
+- 支持混合使用“字符串表名”与“对象类引用”进行 from/join
+  - 例：`.from(SaasTenant.class).leftJoin("saas_order", "o").on(where("o.tenant_id").eq(SaasTenant::getId))`
+  - 也支持：`.from("saas_tenant","t").join(SaasOrder.class,"o")`
+- 条件查询支持字符串列名：`where("o.order_type").in(List.of(1,2,3))`，与类字段可混用
+- 新增聚合函数方法集，可直接在 `select(...)` 中使用
+  - 例：`select(Aggregation.count("o.id"))`、`select(Aggregation.avg(SaasOrder::getAmount))`
+- 新增 `groupBy(...)` 与 `having(...)` 语法
+  - 例：`.groupBy(SaasTenant::getId, SaasTenant::getName).having(where("COUNT(o.id)").gt(0))`
+
 ## 快速接入使用
 
 ### SpringBoot
@@ -168,6 +179,7 @@ public class TestSql {
 3. `SelectComposite.all` => `all`
 4. `Order.by` => `by`
 5. `Query.where` => `where`
+6. `Aggregation.*` => `count/sum/max/min/avg`（聚合函数）
 
 为了方便演示，我们下面的代码都基于静态导入函数：
 
@@ -192,3 +204,51 @@ class SQLConfig {
 5. 查询多表中某个单表的所有字段，请使用`select(all(TableClass.class)).from(TableClass.class).join(Other.class).then()`
 6.
 多张表中查询某些字段，并使用别名，请参考`select(composite(TableA::getName, "nameA"), composite(TableB::getName, "nameB")).from(TableA.class).join(TableB.class)...`
+
+## 字符串表名与别名（适配多对多/中间表）
+
+```java
+import static group.flyfish.fluent.chain.SQL.select;
+import static group.flyfish.fluent.chain.select.SelectComposite.composite;
+import static group.flyfish.fluent.query.Query.where;
+
+// 对象 + 字符串表名混用，条件可混合类字段与字符串列
+var sql = select(
+        composite(SaasTenant::getId, SaasTenant::getName)
+)
+.from(SaasTenant.class)
+.leftJoin("saas_order", "o").on(
+        where("o.tenant_id").eq(SaasTenant::getId)
+)
+.leftJoin("saas_plan", "p").on(
+        where("p.id").eq(SaasOrder::getPlanId)
+)
+.matching(
+        where(SaasTenant::getEnable).eq(true)
+                .and("o.order_type").in(List.of(1, 2, 3))
+);
+
+// 映射结果
+List<TenantContext> list = sql.as(TenantContext.class).block().all();
+```
+
+## 聚合与分组
+
+```java
+import static group.flyfish.fluent.chain.SQL.select;
+import static group.flyfish.fluent.chain.select.SelectComposite.composite;
+import static group.flyfish.fluent.query.Query.where;
+import static group.flyfish.fluent.utils.sql.Aggregation.*;
+
+var sql = select(
+        composite(SaasTenant::getId, SaasTenant::getName),
+        count("o.id") // 也可写 count(SaasOrder::getId)
+)
+.from(SaasTenant.class)
+.leftJoin("saas_order", "o").on(where("o.tenant_id").eq(SaasTenant::getId))
+.matching(where(SaasTenant::getEnable).eq(true))
+.groupBy(SaasTenant::getId, SaasTenant::getName)
+.having(where("COUNT(o.id)").gt(0));
+
+// 若需要为聚合列指定别名以便VO映射，可在VO字段上使用 @Alias("COUNT(o.id)") 或使用 SelectComposite.composite 指定别名
+```

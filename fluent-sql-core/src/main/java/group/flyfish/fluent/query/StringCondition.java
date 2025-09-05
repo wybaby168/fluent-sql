@@ -98,6 +98,48 @@ class StringCondition implements Condition {
     }
 
     @Override
+    public Query gt(Object value) {
+        this.value = value;
+        this.candidate = ConditionCandidate.GT;
+        return callback.apply(this);
+    }
+
+    @Override
+    public Query gte(Object value) {
+        this.value = value;
+        this.candidate = ConditionCandidate.GTE;
+        return callback.apply(this);
+    }
+
+    @Override
+    public Query lt(Object value) {
+        this.value = value;
+        this.candidate = ConditionCandidate.LT;
+        return callback.apply(this);
+    }
+
+    @Override
+    public Query lte(Object value) {
+        this.value = value;
+        this.candidate = ConditionCandidate.LTE;
+        return callback.apply(this);
+    }
+
+    @Override
+    public Query notNull() {
+        this.value = null;
+        this.candidate = ConditionCandidate.NOT_NULL;
+        return callback.apply(this);
+    }
+
+    @Override
+    public Query isNull() {
+        this.value = null;
+        this.candidate = ConditionCandidate.IS_NULL;
+        return callback.apply(this);
+    }
+
+    @Override
     public Query in(Collection<?> collection) {
         this.value = collection;
         this.candidate = ConditionCandidate.IN;

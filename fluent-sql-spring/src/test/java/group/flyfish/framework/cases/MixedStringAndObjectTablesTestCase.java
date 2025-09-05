@@ -14,7 +14,9 @@ import java.util.List;
 
 import static group.flyfish.fluent.chain.SQL.select;
 import static group.flyfish.fluent.chain.select.SelectComposite.composite;
+import static group.flyfish.fluent.chain.select.SelectComposite.names;
 import static group.flyfish.fluent.query.Query.where;
+import static group.flyfish.fluent.utils.sql.Aggregation.count;
 
 /**
  * 混合对象与字符串表名的 SQL 构建测试
@@ -38,9 +40,8 @@ public class MixedStringAndObjectTablesTestCase extends AbstractTestCase<List<Te
         // 演示字符串表名混用
         // from 使用对象表，join 使用字符串表名 + 别名，where/on 条件混用类字段与字符串列名
         this.sql = select(
-                composite(SaasTenant::getId, SaasTenant::getName, SaasTenant::getIdentifier),
-                composite(SaasOrder::getOrderTime, SaasOrder::getExpireTime)
-        )
+                composite(SaasTenant::getId, SaasTenant::getName),
+                count("o.id").as("count"))
                 .from(SaasTenant.class)
                 // 字符串方式 join 已存在的表 saas_order
                 .leftJoin("saas_order", "o").on(
@@ -54,7 +55,9 @@ public class MixedStringAndObjectTablesTestCase extends AbstractTestCase<List<Te
                 .matching(
                         where(SaasTenant::getEnable).eq(true)
                                 .and("o.order_type").in(List.of(1, 2, 3))
-                );
+                )
+                .groupBy(names(SaasTenant::getId, SaasTenant::getName))
+                .having(where("count").gt(0));
     }
 
     @Override

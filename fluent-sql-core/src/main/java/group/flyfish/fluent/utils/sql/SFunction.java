@@ -1,5 +1,6 @@
 package group.flyfish.fluent.utils.sql;
 
+import group.flyfish.fluent.chain.SQLSegment;
 import group.flyfish.fluent.utils.context.AliasComposite;
 import lombok.RequiredArgsConstructor;
 
@@ -16,7 +17,7 @@ import static group.flyfish.fluent.utils.sql.SqlNameUtils.wrap;
  * @param <R> 泛型返回值
  */
 @FunctionalInterface
-public interface SFunction<T, R> extends Function<T, R>, Serializable {
+public interface SFunction<T, R> extends Function<T, R>, SQLSegment, Serializable {
 
     /**
      * 快速获取名称
@@ -32,7 +33,7 @@ public interface SFunction<T, R> extends Function<T, R>, Serializable {
      *
      * @return 结果
      */
-    default String getSelect() {
+    default String get() {
         return EntityNameUtils.toSelect(this);
     }
 
@@ -62,7 +63,7 @@ public interface SFunction<T, R> extends Function<T, R>, Serializable {
         }
 
         @Override
-        public String getSelect() {
+        public String get() {
             return handle(() -> String.join(" ", wrap(column), "as", wrap(name)));
         }
 

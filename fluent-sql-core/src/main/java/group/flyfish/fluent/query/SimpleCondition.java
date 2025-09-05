@@ -101,6 +101,76 @@ class SimpleCondition implements Condition {
     }
 
     /**
+     * 大于
+     * @param value 值
+     * @return 查询链
+     */
+    @Override
+    public Query gt(Object value) {
+        this.value = value;
+        this.candidate = ConditionCandidate.GT;
+        return callback.apply(this);
+    }
+
+    /**
+     * 大于等于
+     * @param value 值
+     * @return 查询链
+     */
+    @Override
+    public Query gte(Object value) {
+        this.value = value;
+        this.candidate = ConditionCandidate.GTE;
+        return callback.apply(this);
+    }
+
+    /**
+     * 小于
+     * @param value 值
+     * @return 查询链
+     */
+    @Override
+    public Query lt(Object value) {
+        this.value = value;
+        this.candidate = ConditionCandidate.LT;
+        return callback.apply(this);
+    }
+
+    /**
+     * 小于等于
+     * @param value 值
+     * @return 查询链
+     */
+    @Override
+    public Query lte(Object value) {
+        this.value = value;
+        this.candidate = ConditionCandidate.LTE;
+        return callback.apply(this);
+    }
+
+    /**
+     * 不为空
+     * @return 查询链
+     */
+    @Override
+    public Query notNull() {
+        this.value = null;
+        this.candidate = ConditionCandidate.NOT_NULL;
+        return callback.apply(this);
+    }
+
+    /**
+     * 为空
+     * @return 查询链
+     */
+    @Override
+    public Query isNull() {
+        this.value = null;
+        this.candidate = ConditionCandidate.IS_NULL;
+        return callback.apply(this);
+    }
+
+    /**
      * 在集合内
      *
      * @param collection 任意内容集合

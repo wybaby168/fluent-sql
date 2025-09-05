@@ -25,7 +25,6 @@ import group.flyfish.fluent.utils.context.AliasComposite;
 import group.flyfish.fluent.utils.data.ParameterUtils;
 import group.flyfish.fluent.utils.sql.ConcatSegment;
 import group.flyfish.fluent.utils.sql.EntityNameUtils;
-import group.flyfish.fluent.utils.sql.SFunction;
 import group.flyfish.fluent.utils.sql.SqlNameUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.lang.NonNull;
@@ -33,16 +32,12 @@ import org.springframework.util.Assert;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import static group.flyfish.fluent.utils.cache.CachedWrapper.wrap;
-import java.util.Map;
 
 /**
  * 查询工具类
@@ -94,24 +89,22 @@ final class SQLImpl extends ConcatSegment<SQLImpl> implements SQLOperations, Pre
     }
 
     /**
-     * 查询起手
+     * 查询起手（表达式/聚合）
      *
-     * @param fields 字段列表，不传代表所有字段
+     * @param segments 表达式/聚合
      * @return 预查询链
      */
-    @SafeVarargs
-    @Override
-    public final <T> PreSqlChain select(SFunction<T, ?>... fields) {
+    public PreSqlChain select(SQLSegment... segments) {
         // 追加字段
-        if (fields != null && fields.length > 0) {
+        if (segments != null && segments.length > 0) {
             if (!selections.isEmpty()) {
                 selections.add(() -> ",");
             }
-            selections.add(() -> Arrays.stream(fields)
-                    .map(SFunction::getSelect).collect(Collectors.joining(",")));
+            selections.add(() -> Arrays.stream(segments)
+                    .map(SQLSegment::get).collect(Collectors.joining(",")));
         }
         // 首个项，添加SELECT
-        if (segments.isEmpty()) {
+        if (this.segments.isEmpty()) {
             return this.concat("SELECT");
         }
         return this;
@@ -184,13 +177,12 @@ final class SQLImpl extends ConcatSegment<SQLImpl> implements SQLOperations, Pre
      */
     public HandleSqlChain from(String table, String alias) {
         this.primaryClass = Map.class; // 对于字符串表，结果映射通常需要 as(Class) 指定
-        String key = table;
         return this
-                .ctxPut(ctx -> ctx.put(key, AliasComposite.add(table, alias)))
+                .ctxPut(ctx -> ctx.put(table, AliasComposite.add(table, alias)))
                 .concat(this::applySelections)
                 .concat("FROM")
                 .concat(() -> SqlNameUtils.wrap(table))
-                .concat(() -> SqlNameUtils.wrap(this.ctx(key)));
+                .concat(() -> SqlNameUtils.wrap(this.ctx(table)));
     }
 
     /**
@@ -231,11 +223,10 @@ final class SQLImpl extends ConcatSegment<SQLImpl> implements SQLOperations, Pre
 
     @Override
     public AfterJoinSqlChain join(JoinCandidate type, String table, String alias) {
-        String key = table;
-        return ctxPut(ctx -> ctx.put(key, AliasComposite.add(table, alias)))
+        return ctxPut(ctx -> ctx.put(table, AliasComposite.add(table, alias)))
                 .concat(type)
                 .concat(() -> SqlNameUtils.wrap(table))
-                .concat(() -> SqlNameUtils.wrap(ctx(key)));
+                .concat(() -> SqlNameUtils.wrap(ctx(table)));
     }
 
     /**
@@ -299,6 +290,33 @@ final class SQLImpl extends ConcatSegment<SQLImpl> implements SQLOperations, Pre
                             .collect(Collectors.joining(",")));
         }
         return this;
+    }
+
+    @Override
+    public AfterWhereSqlChain groupBy(SQLSegment... fields) {
+        if (null != fields && fields.length > 0) {
+            return concat("GROUP BY")
+                    .concat(() -> Arrays.stream(fields).map(SQLSegment::get)
+                            .collect(Collectors.joining(",")));
+        }
+        return this;
+    }
+
+    @Override
+    public AfterWhereSqlChain groupBy(String... columns) {
+        if (null != columns && columns.length > 0) {
+            return concat("GROUP BY")
+                    .concat(() -> Arrays.stream(columns)
+                            .map(SqlNameUtils::wrap)
+                            .collect(Collectors.joining(",")));
+        }
+        return this;
+    }
+
+    @Override
+    public AfterWhereSqlChain having(Query query) {
+        if (withoutParameter(query)) return this;
+        return concat("HAVING").concat(query);
     }
 
 
